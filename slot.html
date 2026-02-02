@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>暗逗大王报名单</title>
+
+  <!-- 字体 -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <!-- 样式 -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+<!-- ===== 开始遮罩 ===== -->
+<div id="startGate">
+  <button id="startBtn">🔥 教练，我想打百业战！</button>
+</div>
+
+<!-- ===== BGM ===== -->
+<audio id="bgm" loop>
+  <source src="bgm.mp3" type="audio/mpeg">
+</audio>
+
+<!-- ===== 标题 ===== -->
+<h2>🎮 百业战 30人报名</h2>
+<p>点击空位 → 输入 ID → 锁定</p>
+
+<!-- ===== 说明 ===== -->
+<div id="legend" style="
+  max-width:520px;
+  margin:0 auto 30px auto;
+  text-align:left;
+  font-size:14px;
+  line-height:1.5;
+">
+  <p>💡 当前加班修改中（其实在偷懒）</p>
+
+  <p>
+    <span style="color:#2ecc71;">绿色</span>
+    <span style="color:#fff; margin-right:15px;">推荐奶妈</span>
+
+    <span style="color:#3498db;">蓝色</span>
+    <span style="color:#fff; margin-right:15px;">推荐输出</span>
+
+    <span style="color:#f5c542;">黄色</span>
+    <span style="color:#fff; margin-right:15px;">推荐坦克</span>
+  </p>
+
+  <p>
+    <span style="color:#ff5555;">红色</span>
+    <span style="color:#fff;">打野位</span>
+  </p>
+
+  <p>💡 无名推荐（大团）：双刀 / 99 / 拳甲（打野）</p>
+</div>
+
+<!-- ===== 报名表格 ===== -->
+<div id="grid"></div>
+
+<!-- ===== 取消报名 ===== -->
+<div style="margin-bottom:20px;">
+  <button onclick="cancelSign()">取消报名</button>
+</div>
+
+<!-- ===== BGM 开关 ===== -->
+<button id="bgmToggle" class="bgm-toggle">🎵 ON</button>
+
+<!-- ===== 留言区 ===== -->
+<div id="messageBox" style="
+  max-width:520px;
+  margin:40px auto 80px auto;
+  padding:20px;
+  background:rgba(0,0,0,0.35);
+  border-radius:12px;
+">
+  <h3 style="margin-top:0;">💬 留言板</h3>
+
+  <input
+    id="msgName"
+    placeholder="留言者ID"
+    style="width:100%; margin-bottom:10px;"
+  >
+
+  <input
+    id="msgContent"
+    placeholder="说点好的…(建议称赞社长)"
+    style="width:100%; margin-bottom:10px;"
+  >
+
+  <button onclick="sendMessage()">发送</button>
+
+  <div id="messageList" style="margin-top:15px;"></div>
+</div>
+
+<!-- ===== JS ===== -->
+<script src="app.js"></script>
+
+</body>
+</html>
