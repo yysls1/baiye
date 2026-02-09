@@ -1,0 +1,176 @@
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #1c1c1c, #0b0b0b 70%);
+  color: #f1f1f1;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 20px;
+}
+
+.container {
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
+  text-align: center;
+}
+
+h1 {
+  margin-bottom: 16px;
+  letter-spacing: 2px;
+}
+
+/* 花名册 */
+.member-title {
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.member-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.member-card {
+  aspect-ratio: 3 / 4;
+  background: rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+}
+
+.member-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255,255,255,0.18);
+}
+
+.member-card.me {
+  border: 2px solid gold;
+}
+
+.name {
+  font-size: 13px;
+}
+
+.add-card {
+  font-size: 36px;
+  border: 2px dashed rgba(255,255,255,0.4);
+}
+
+/* 登录区 */
+.login-area {
+  margin-top: 16px;
+}
+
+.login-area input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  border-radius: 6px;
+  border: none;
+}
+
+.login-area button {
+  margin-top: 8px;
+  padding: 10px;
+  width: 100%;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #ffcc00, #ff8800);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#loginMsg {
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+/* 按钮 */
+.actions {
+  margin-top: 16px;
+}
+
+.actions button {
+  padding: 14px;
+  width: 100%;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #ffcc00, #ff8800);
+  font-weight: bold;
+}
+
+/* 注册弹层 */
+.register-panel {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-box {
+  width: 90%;
+  max-width: 320px;
+  background: #1a1a1a;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.register-box input {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 6px;
+  border: none;
+}
+
+.register-box button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.register-box .secondary {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+#msg {
+  font-size: 13px;
+}
+
+.avatar {
+  flex: 1;
+  width: 100%;
+  background: rgba(0,0,0,0.25);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+

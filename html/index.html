@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>剑卒过河 - 花名册</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="css/index.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+  <div class="container">
+    <h1>⚔️ 剑卒过河</h1>
+
+    <!-- 花名册 -->
+    <div class="member-title">花名册</div>
+    <div class="member-grid" id="memberGrid"></div>
+
+    <!-- 登录区 -->
+    <div id="loginArea" class="login-area" style="display:none;">
+      <p id="selectedName"></p>
+      <input id="loginPin" placeholder="输入 4 位数字密码" maxlength="4">
+      <button onclick="verifyPin()">登录</button>
+      <p id="loginMsg"></p>
+    </div>
+    <!-- 头像上传（隐藏） -->
+    <input
+      type="file"
+      id="avatarInput"
+      accept="image/*"
+      style="display:none"
+    />
+
+    <!-- 功能入口 -->
+    <div class="actions">
+      <button onclick="location.href='slot.html'">🧑‍🤝‍🧑 抢号 / 报名</button>
+    </div>
+  </div>
+
+  <!-- 注册弹层 -->
+  <div class="register-panel" id="registerPanel">
+    <div class="register-box">
+      <h2>📜 注册百业成员</h2>
+      <input id="userId" placeholder="游戏ID（可中文）">
+      <input id="pin" placeholder="4 位数字密码" maxlength="4">
+      <input id="nickname" placeholder="花名（可选）">
+      <button onclick="registerMember()">注册</button>
+      <button class="secondary" onclick="closeRegister()">取消</button>
+      <p id="msg"></p>
+    </div>
+  </div>
+
+  <script src="js/index.js"></script>
+</body>
+</html>

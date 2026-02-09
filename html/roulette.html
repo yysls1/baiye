@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>🎡 百业战幸运轮盘</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<h2>🎡 幸运轮盘</h2>
+
+<div class="panel">
+  <input id="nameInput" placeholder="名字">
+  <select id="roundInput">
+    <option value="1">场次 1</option>
+    <option value="2">场次 2</option>
+    <option value="3">场次 3</option>
+    <option value="4">场次 4</option>
+  </select>
+  <button onclick="addPlayer()">加入轮盘</button>
+</div>
+
+<div id="list"></div>
+
+<!-- 轮盘区 -->
+<div class="wheel-container">
+  <div class="pointer">▼</div>
+  <canvas id="wheel" width="300" height="300"></canvas>
+</div>
+
+<button class="spin-btn" onclick="spin()">🎰 开始抽奖</button>
+<button class="reset-btn" onclick="resetWheel()">🔄 重置轮盘</button>
+
+<script src="js/roulette.js"></script>
+</body>
+</html>
