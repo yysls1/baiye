@@ -142,16 +142,13 @@ avatarInput.onchange = async () => {
   }
 
   const ext = file.name.split(".").pop()
-  const filePath = `${user.id}/avatar.${ext}`
+  const filePath = `${user.id}/avatar_${Date.now()}.${ext}`
 
-  const { error } = await client.storage
+  const { error: uploadError } = await client.storage
     .from("avatars")
-    .upload(filePath, file, { upsert: true })
+    .upload(filePath, file)
 
-  if (error) {
-    alert(error.message)
-    return
-  }
+  if (uploadError) return alert(uploadError.message)
 
   const { data } = client.storage
     .from("avatars")
@@ -159,10 +156,11 @@ avatarInput.onchange = async () => {
 
   await client
     .from("baiye_members")
-    .update({ avatar_url: data.publicUrl })
+    .update({ avatar_url: data.publicUrl + "?t=" + Date.now() })
     .eq("id", user.id)
 
   loadMembers()
+
 }
 
 let selectedLoginId = null
@@ -209,6 +207,77 @@ async function confirmLogin() {
   document.getElementById("loginModal").style.display = "none"
   loadMembers()
 }
+
+/* 
+Comment
+*/
+
+const commentList = document.getElementById("commentList")
+const commentInput = document.getElementById("commentInput")
+
+// 加载留言
+async function loadComments() {
+  const { data: comments, error } = await client
+    .from("baiye_comments")
+    .select("id, user_id, nickname, content, created_at")
+    .order("created_at", { ascending: false }) // 最新在前
+
+  if (error) {
+    console.error("加载留言失败:", error.message)
+    return
+  }
+
+  commentList.innerHTML = ""
+
+  comments.forEach(c => {
+    const div = document.createElement("div")
+    div.className = "comment-card"
+    div.innerHTML = `
+      <div class="nickname">${c.nickname}</div>
+      <div class="content">${c.content}</div>
+    `
+    commentList.appendChild(div)
+  })
+}
+
+// 发送留言
+async function sendComment() {
+  const content = commentInput.value.trim()
+  if (!content) return alert("请输入留言内容")
+
+  const { data: { user } } = await client.auth.getUser()
+  if (!user) return alert("请先登录才能留言")
+
+  const { error } = await client
+    .from("baiye_comments")
+    .insert({
+      user_id: user.id,
+      nickname: (await getMyNickname()) || "未命名",
+      content
+    })
+
+  if (error) return alert("留言失败: " + error.message)
+
+  commentInput.value = ""
+  loadComments()
+}
+
+// 获取自己昵称
+async function getMyNickname() {
+  const { data, error } = await client
+    .from("baiye_members")
+    .select("nickname")
+    .eq("id", (await client.auth.getUser()).data.user.id)
+    .single()
+
+  if (error) return null
+  return data.nickname
+}
+
+// 页面加载时初始化留言
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadComments()
+})
 
 
 /* ======================

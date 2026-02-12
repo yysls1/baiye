@@ -42,12 +42,25 @@
       <button onclick="location.href='slot.html'">🧑‍🤝‍🧑 进入名录</button>
     </div>
     <div class="footer-mark">百业堂 · 江湖录</div>
+    
+    <!-- 留言板 -->
+    <div class="comment-section">
+      <h2>💬 留言板</h2>
+      
+      <div id="commentList" class="comment-list"></div>
+      
+      <div id="commentInputWrapper" class="comment-input-wrapper">
+        <input id="commentInput" type="text" placeholder="输入留言..." maxlength="200">
+        <button onclick="sendComment()">发送</button>
+      </div>
+    </div>
   </div>
-
-  <!-- 注册弹层 -->
-  <div class="register-panel" id="registerPanel">
-    <div class="register-box">
-      <h2>📜 百业入册 </h2>
+    
+    
+    <!-- 注册弹层 -->
+    <div class="register-panel" id="registerPanel">
+      <div class="register-box">
+        <h2>📜 百业入册 </h2>
       <input id="userId" placeholder="游戏ID（可中文）">
       <input id="pin" placeholder="6 位数字密码" maxlength="6">
       <input id="nickname" placeholder="花名（可选）">
