@@ -211,7 +211,6 @@ async function confirmLogin() {
 /* 
 Comment
 */
-
 const commentList = document.getElementById("commentList")
 const commentInput = document.getElementById("commentInput")
 
@@ -220,7 +219,7 @@ async function loadComments() {
   const { data: comments, error } = await client
     .from("baiye_comments")
     .select("id, user_id, nickname, content, created_at")
-    .order("created_at", { ascending: false }) // 最新在前
+    .order("created_at", { ascending: false }) // 最新留言在数组最前
 
   if (error) {
     console.error("加载留言失败:", error.message)
@@ -229,68 +228,114 @@ async function loadComments() {
 
   commentList.innerHTML = ""
 
-  comments.forEach(c => {
+  for (const c of comments) {
+    let avatarUrl = "img/default-avatar.png"
+    const { data: memberData } = await client
+      .from("baiye_members")
+      .select("avatar_url")
+      .eq("id", c.user_id)
+      .single()
+    if (memberData && memberData.avatar_url) avatarUrl = memberData.avatar_url
+
     const div = document.createElement("div")
     div.className = "comment-card"
     div.innerHTML = `
-      <div class="nickname">${c.nickname}</div>
-      <div class="content">${c.content}</div>
+      <div class="avatar">
+        <img src="${avatarUrl}" alt="avatar">
+      </div>
+      <div class="comment-content">
+        <div class="nickname">${c.nickname || "未命名"}</div>
+        <div class="content">${c.content}</div>
+        <div class="time">${new Date(c.created_at).toLocaleString()}</div>
+      </div>
     `
     commentList.appendChild(div)
-  })
+  }
+
+  commentList.scrollTop = 0
 }
+
+// 不要再重新声明 commentInput，直接用已有的
+commentInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    sendComment();
+  }
+});
 
 // 发送留言
 async function sendComment() {
-  const content = commentInput.value.trim()
-  if (!content) return alert("请输入留言内容")
+  const content = commentInput.value.trim();
+  if (!content) return alert("请输入留言内容");
 
-  const { data: { user } } = await client.auth.getUser()
-  if (!user) return alert("请先登录才能留言")
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) return alert("请先登录才能留言");
 
-  const { error } = await client
+  const nickname = await getMyNickname() || "未命名";
+
+  // 1️⃣ 先插入数据库
+  const { data, error } = await client
     .from("baiye_comments")
     .insert({
       user_id: user.id,
-      nickname: (await getMyNickname()) || "未命名",
+      nickname,
       content
     })
+    .select()  // 返回插入的数据
+    .single(); // 单条数据
 
-  if (error) return alert("留言失败: " + error.message)
+  if (error) return alert("留言失败: " + error.message);
 
-  commentInput.value = ""
-  loadComments()
+  // 2️⃣ 清空输入框
+  commentInput.value = "";
+
+  // 3️⃣ 在本地直接添加最新留言到顶部，避免重新拉取全部
+  const div = document.createElement("div");
+  div.className = "comment-card";
+  div.innerHTML = `
+    <div class="avatar">
+      <img src="${await getMyAvatar()}" alt="avatar">
+    </div>
+    <div class="comment-content">
+      <div class="nickname">${nickname}</div>
+      <div class="content">${content}</div>
+      <div class="time">${new Date().toLocaleString()}</div>
+    </div>
+  `;
+  commentList.prepend(div); // 最新留言在上
 }
 
-// 获取自己昵称
+async function getMyAvatar() {
+  const { data } = await client
+    .from("baiye_members")
+    .select("avatar_url")
+    .eq("id", (await client.auth.getUser()).data.user.id)
+    .single();
+  return (data && data.avatar_url) || "img/default-avatar.png";
+}
+
+// 获取昵称
 async function getMyNickname() {
   const { data, error } = await client
     .from("baiye_members")
     .select("nickname")
     .eq("id", (await client.auth.getUser()).data.user.id)
     .single()
-
   if (error) return null
   return data.nickname
 }
-
-// 页面加载时初始化留言
-document.addEventListener("DOMContentLoaded", async () => {
-  await loadComments()
-})
-
 
 /* ======================
    初始化
 ====================== */
 document.addEventListener("DOMContentLoaded", async () => {
-
   // 页面初始加载
   await loadMembers()
+  await loadComments()  // <- 加这一行
 
   // 监听登录 / 登出状态变化
   client.auth.onAuthStateChange((event, session) => {
     loadMembers()
   })
-
 })
+
