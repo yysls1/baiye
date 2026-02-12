@@ -77,8 +77,8 @@ async function registerMember() {
     return
   }
 
-  const safeUsername = encodeURIComponent(username)
-  const fakeEmail = `${safeUsername}@jianzu.com`
+  // ✅ 生成随机邮箱
+  const fakeEmail = `${crypto.randomUUID()}@jianzu.com`
 
   const { data, error } = await client.auth.signUp({
     email: fakeEmail,
@@ -95,11 +95,13 @@ async function registerMember() {
     return
   }
 
+  // ✅ 保存 email 到自己的表
   const { error: insertError } = await client
     .from("baiye_members")
     .insert({
       id: data.user.id,
-      nickname: nickname || username
+      nickname: nickname || username,
+      email: fakeEmail
     })
 
   if (insertError) {
@@ -175,10 +177,21 @@ async function confirmLogin() {
 
   if (!password) return
 
-  const fakeEmail = `${selectedLoginId}@jianzu.com`
+  // 先查出该用户的 email
+  const { data, error: fetchError } = await client
+    .from("baiye_members")
+    .select("email")
+    .eq("id", selectedLoginId)
+    .single()
 
+  if (fetchError || !data) {
+    alert("用户不存在")
+    return
+  }
+
+  // 用数据库里保存的 email 登录
   const { error } = await client.auth.signInWithPassword({
-    email: fakeEmail,
+    email: data.email,
     password
   })
 
@@ -189,10 +202,6 @@ async function confirmLogin() {
 
   document.getElementById("loginModal").style.display = "none"
   loadMembers()
-}
-
-function closeLogin() {
-  document.getElementById("loginModal").style.display = "none"
 }
 
 
