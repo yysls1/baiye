@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>剑卒过河 - 花名册</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/index.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -11,7 +12,8 @@
 
 <body>
   <div class="container">
-    <h1>⚔️ 剑卒过河</h1>
+    <h1>剑卒过河</h1>
+    <div class="ink-line"></div>
 
     <!-- 花名册 -->
     <div class="member-title">花名册</div>
@@ -20,7 +22,7 @@
     <!-- 登录弹窗 -->
     <div id="loginModal" class="register-panel" style="display:none;">
       <div class="register-box">
-        <h2>🔐 输入密码</h2>
+        <h2>🔐 输入密令</h2>
         <input id="loginPassword" type="password" placeholder="输入密码">
         <button onclick="confirmLogin()">登录</button>
         <button class="secondary" onclick="closeLogin()">取消</button>
@@ -37,14 +39,15 @@
 
     <!-- 功能入口 -->
     <div class="actions">
-      <button onclick="location.href='slot.html'">🧑‍🤝‍🧑 抢号 / 报名</button>
+      <button onclick="location.href='slot.html'">🧑‍🤝‍🧑 进入名录</button>
     </div>
+    <div class="footer-mark">百业堂 · 江湖录</div>
   </div>
 
   <!-- 注册弹层 -->
   <div class="register-panel" id="registerPanel">
     <div class="register-box">
-      <h2>📜 注册百业成员</h2>
+      <h2>📜 百业入册 </h2>
       <input id="userId" placeholder="游戏ID（可中文）">
       <input id="pin" placeholder="6 位数字密码" maxlength="6">
       <input id="nickname" placeholder="花名（可选）">

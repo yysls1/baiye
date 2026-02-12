@@ -23,10 +23,10 @@ async function loadMembers() {
   const { data, error } = await client
     .from("baiye_members")
     .select("id, nickname, avatar_url")
-    .order("created_at")
+    .order("created_at", { ascending: true })
 
   if (error) {
-    console.error(error)
+    console.error("加载失败:", error.message)
     return
   }
 
@@ -36,7 +36,7 @@ async function loadMembers() {
     const div = document.createElement("div")
     div.className = "member-card"
 
-    const avatarSrc = m.avatar_url || "img/default-avatar.png"
+    const avatarSrc = m.avatar_url || "./img/default-avatar.png"
 
     if (user && m.id === user.id) {
       div.classList.add("me")
@@ -47,7 +47,7 @@ async function loadMembers() {
 
     div.innerHTML = `
       <div class="avatar">
-        <img src="${avatarSrc}" alt="avatar">
+        <img src="${avatarSrc}" alt="">
       </div>
       <div class="name">${m.nickname || "未命名"}</div>
     `
@@ -169,8 +169,14 @@ let selectedLoginId = null
 
 function openLoginModal(userId) {
   selectedLoginId = userId
-  document.getElementById("loginModal").style.display = "block"
+  document.getElementById("loginModal").style.display = "flex"
 }
+
+function closeLogin() {
+  document.getElementById("loginModal").style.display = "none"
+  document.getElementById("loginPassword").value = ""
+}
+
 
 async function confirmLogin() {
   const password = document.getElementById("loginPassword").value.trim()
