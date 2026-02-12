@@ -36,11 +36,9 @@ async function loadMembers() {
     const div = document.createElement("div")
     div.className = "member-card"
     if (m.user_id === current) div.classList.add("me")
+      
+  const avatarSrc = m.avatar_url || "img/default-avatar.png"
 
-    const localAvatar = localStorage.getItem("avatar_" + m.user_id)
-
-    const avatarSrc =
-      m.avatar_url || localAvatar || "img/default-avatar.png"
 
     div.innerHTML = `
       <div class="avatar">
@@ -132,9 +130,10 @@ async function registerMember() {
 
   await client.from("baiye_members").insert({
     user_id: userId,
-    password: pin,
+    password: parseInt(pin),
     nickname: nickname || null
   })
+
 
   closeRegister()
   loadMembers()
@@ -156,18 +155,10 @@ function closeRegister() {
    头像上传（核心）
 ====================== */
 avatarInput.onchange = async () => {
-  console.log("📸 onchange 触发")
-
   const file = avatarInput.files[0]
-  console.log("文件：", file)
-
-  if (!file) {
-    console.log("❌ 没有选择文件")
-    return
-  }
+  if (!file) return
 
   const userId = localStorage.getItem("currentUser")
-  console.log("当前用户：", userId)
 
   if (!userId) {
     alert("未登录")
@@ -175,47 +166,35 @@ avatarInput.onchange = async () => {
   }
 
   const ext = file.name.split(".").pop()
-  const filePath = `avatar_${userId}_${Date.now()}.${ext}`
-  console.log("上传路径：", filePath)
+  const filePath = `avatar_${Date.now()}.${ext}`
 
-  // 1️⃣ 上传 Storage
+
+  // 上传（用 upsert 替换旧头像）
   const { error: uploadError } = await client.storage
     .from("avatars")
     .upload(filePath, file, { upsert: true })
 
   if (uploadError) {
-    console.error("❌ 上传失败", uploadError)
     alert(uploadError.message)
     return
   }
 
-  console.log("✅ 上传成功")
-
-  // 2️⃣ 获取 URL
   const { data } = client.storage
     .from("avatars")
     .getPublicUrl(filePath)
 
-  console.log("头像 URL：", data.publicUrl)
-
-  // ⭐ 关键：存到本地
-  localStorage.setItem("avatar_" + userId, data.publicUrl)
-
-  // 3️⃣ 写数据库（这步现在其实可有可无）
+  // 写数据库
   const { error: updateError } = await client
     .from("baiye_members")
     .update({ avatar_url: data.publicUrl })
     .eq("user_id", userId)
 
   if (updateError) {
-    console.error("❌ 数据库更新失败", updateError)
-    alert("数据库更新失败（RLS）")
+    alert(updateError.message)
     return
   }
 
-  console.log("✅ 数据库更新成功")
-
-  avatarInput.value = "" // ⚠️ 非常重要
+  avatarInput.value = ""
   loadMembers()
 }
 
