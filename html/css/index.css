@@ -64,7 +64,7 @@ h2 {
 .member-grid {
   display: grid;
   gap: 20px;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 3fr));
   justify-content: center;   /* 整个 grid 居中 */
 }
 
