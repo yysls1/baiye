@@ -68,8 +68,8 @@ h2 {
 
 .member-grid {
   display: grid;
-  gap: 20px;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 3fr));
+  gap: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 3fr));
   justify-content: center;   /* 整个 grid 居中 */
 }
 
