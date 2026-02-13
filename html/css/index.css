@@ -36,7 +36,7 @@ body {
 h1 {
   margin-bottom: 18px;
   letter-spacing: 3px;
-  font-size: clamp(50px, 12vw, 105px);
+  font-size: clamp(60px, 12vw, 105px);
   font-weight: 600;
   color: #ffd700;
   text-shadow: 0 0 12px rgba(255, 180, 0, 0.4);
@@ -45,7 +45,7 @@ h1 {
 h2 {
   margin-bottom: 7px;
   letter-spacing: 2px;
-  font-size: clamp(20px, 12vw, 45px);
+  font-size: clamp(30px, 12vw, 45px);
   font-weight: 250;
   color: #ffd700;
   text-shadow: 0 0 12px rgba(255, 180, 0, 0.4);
@@ -104,7 +104,7 @@ h2 {
 }
 
 .name {
-  font-size: clamp(15px, 2.5vw, 30px);
+  font-size: clamp(20px, 2.5vw, 30px);
   margin-top: 4px;
   color: #f1d6a8;
   white-space: nowrap;
@@ -117,7 +117,7 @@ h2 {
 .add-card {
   width: 70%;
   aspect-ratio: 4 / 5;
-  font-size: clamp(30px, 12vw, 75px);
+  font-size: clamp(50px, 12vw, 75px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -151,7 +151,7 @@ h2 {
 }
 
 .id {
-  font-size: clamp(10px, 2vw, 35px);
+  font-size: clamp(17px, 2vw, 35px);
   color: #ffd700;
   margin-top: clamp(5px, 12vw, 10px);
   text-align: center;
@@ -161,7 +161,7 @@ h2 {
 }
 
 .nickname {
-  font-size: clamp(8px, 2vw, 30px);
+  font-size: clamp(15px, 2vw, 30px);
   color: #f1d6a8;
   text-align: center;
   white-space: nowrap;
@@ -171,7 +171,7 @@ h2 {
 }
 
 .role {
-  font-size: clamp(7px, 1.8vw, 25px);
+  font-size: clamp(10px, 1.8vw, 25px);
   color: #ffcc66;
   text-align: center;
   margin-top: 2px;
@@ -514,6 +514,9 @@ h2 {
 @media (min-width: 1024px) {
   .member-grid {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+  .member-card {
+    width: 90%;
   }
   .container {
     max-width: 1200px;
