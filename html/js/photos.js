@@ -2,7 +2,6 @@
    Supabase client
 ====================== */
 const client = window.supabaseClient;
-
 if (!client) console.error("Supabase client 未初始化");
 
 // DOM
@@ -27,10 +26,7 @@ uploadBtn.addEventListener("click", async () => {
     .eq("id", user.id)
     .single();
 
-  if (memberError || !memberData) {
-    alert("获取用户信息失败");
-    return;
-  }
+  if (memberError || !memberData) return alert("获取用户信息失败");
 
   const nickname = memberData.nickname || memberData.username;
   const role = memberData.role || "";
@@ -44,31 +40,30 @@ uploadBtn.addEventListener("click", async () => {
   const { data: uploadData, error: uploadError } = await client.storage
     .from("user-photos")
     .upload(filePath, file, { cacheControl: '3600', upsert: false });
-
   if (uploadError) return alert("上传失败: " + uploadError.message);
 
   const { data: urlData } = client.storage.from("user-photos").getPublicUrl(filePath);
   const photo_url = urlData.publicUrl;
 
-  // 写入数据库
-  const { error } = await client.from("photos").insert({
-    user_id: user.id,
-    photo_url,
-    uploaded_at: new Date().toISOString()
-  });
+  // 写入数据库并获取 photoId
+  const { data: insertedPhoto, error: insertError } = await client.from("photos")
+    .insert({
+      user_id: user.id,
+      photo_url,
+      uploaded_at: new Date().toISOString()
+    })
+    .select() // 返回插入记录
+    .single();
 
-  if (error) return alert("数据库保存失败: " + error.message);
+  if (insertError) return alert("数据库保存失败: " + insertError.message);
 
   photoInput.value = "";
 
-  // 直接添加到页面
   addPhotoToList({
-    user_id: user.id,
+    ...insertedPhoto,
     username,
     nickname,
-    role,
-    photo_url,
-    uploaded_at: new Date().toISOString()
+    role
   });
 });
 
@@ -84,7 +79,7 @@ async function loadPhotos() {
 
   photoList.innerHTML = "";
 
-  // 使用 Promise.all 并行获取用户信息
+  // 并行获取用户信息
   const photoPromises = photos.map(async (photo) => {
     const { data: memberData } = await client
       .from("baiye_members")
@@ -112,8 +107,10 @@ async function loadPhotos() {
 /* ======================
    添加单张照片到列表
 ====================== */
-function addPhotoToList(photo) {
+async function addPhotoToList(photo) {
   const displayName = getDisplayNameWithRole(photo);
+  const photoId = photo.id;
+
   const div = document.createElement("div");
   div.className = "photo-post";
   div.innerHTML = `
@@ -122,23 +119,91 @@ function addPhotoToList(photo) {
       <span class="time">${new Date(photo.uploaded_at).toLocaleString()}</span>
     </div>
     <img class="photo-img" src="${photo.photo_url}" alt="photo">
+    <div class="photo-actions">
+      <button class="like-btn">❤️ 点赞</button>
+      <span class="like-count">0</span>
+    </div>
+    <div class="photo-comments">
+      <div class="comments-list"></div>
+      <input class="comment-input" type="text" placeholder="写评论..." />
+      <button class="comment-btn">发送</button>
+    </div>
   `;
   photoList.prepend(div);
+
+  const likeBtn = div.querySelector(".like-btn");
+  const likeCountSpan = div.querySelector(".like-count");
+  const commentsList = div.querySelector(".comments-list");
+  const commentInput = div.querySelector(".comment-input");
+  const commentBtn = div.querySelector(".comment-btn");
+
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) return;
+
+  // 🔹 加载点赞数
+  async function loadLikes() {
+    const { count } = await client
+      .from("likes")
+      .select("*", { count: "exact" })
+      .eq("photo_id", photoId);
+    likeCountSpan.textContent = count || 0;
+  }
+
+  // 🔹 加载评论
+  async function loadComments() {
+    const { data: comments } = await client
+      .from("comments")
+      .select("*, baiye_members(username,nickname)")
+      .eq("photo_id", photoId)
+      .order("created_at", { ascending: true });
+
+    commentsList.innerHTML = "";
+    comments.forEach(c => {
+      const name = c.baiye_members?.nickname || c.baiye_members?.username || "匿名";
+      const div = document.createElement("div");
+      div.className = "comment";
+      div.textContent = `${name}: ${c.comment_text}`;
+      commentsList.appendChild(div);
+    });
+  }
+
+  await loadLikes();
+  await loadComments();
+
+  // 点赞按钮事件
+  likeBtn.addEventListener("click", async () => {
+    await client.from("likes").upsert({
+      photo_id: photoId,
+      user_id: user.id
+    }, { onConflict: ['photo_id','user_id'] });
+    await loadLikes();
+  });
+
+  // 评论按钮事件
+  commentBtn.addEventListener("click", async () => {
+    const text = commentInput.value.trim();
+    if (!text) return;
+    await client.from("comments").insert({
+      photo_id: photoId,
+      user_id: user.id,
+      comment_text: text
+    });
+    commentInput.value = "";
+    await loadComments();
+  });
 }
- 
+
+/* ======================
+   显示昵称和角色
+====================== */
 function getDisplayNameWithRole(photo) {
-  // 优先显示花名，如果花名和 username 不同
   let displayName = (photo.nickname && photo.nickname !== photo.username)
     ? photo.nickname
     : photo.username;
 
-  if (photo.role) {
-    displayName += `【${photo.role}】`;
-  }
-
+  if (photo.role) displayName += `【${photo.role}】`;
   return displayName;
 }
-
 
 /* ======================
    页面加载
