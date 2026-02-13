@@ -105,6 +105,18 @@ async function registerMember() {
     return
   }
 
+  // ✅ 先检查重复用户名
+  const { data: existingUser } = await client
+    .from("baiye_members")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle()
+
+  if (existingUser) {
+    msg.innerText = "该用户名已被注册"
+    return
+  }
+
   const fakeEmail = `${crypto.randomUUID()}@jianzu.com`
 
   const { data, error } = await client.auth.signUp({
@@ -117,25 +129,13 @@ async function registerMember() {
     return
   }
 
-  if (!data.user) {
-    msg.innerText = "注册失败"
-    return
-  }
-
-  const { error: insertError } = await client
-    .from("baiye_members")
-    .insert({
-      id: data.user.id,
-      nickname: nickname || username,
-      username: username,
-      email: fakeEmail,
-      priority: 999 // 默认没有称号的优先级很低
-    })
-
-  if (insertError) {
-    msg.innerText = insertError.message
-    return
-  }
+  await client.from("baiye_members").insert({
+    id: data.user.id,
+    nickname: nickname || username,
+    username: username,
+    email: fakeEmail,
+    priority: 999
+  })
 
   msg.innerText = "注册成功"
   closeRegister()
