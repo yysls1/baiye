@@ -505,7 +505,7 @@ h2 {
 ====================== */
 @media (min-width: 1200px) {
   .member-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     max-width: 1200px;
     margin: 0 auto;
   }
@@ -513,7 +513,7 @@ h2 {
 
 @media (min-width: 1024px) {
   .member-grid {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
   .container {
     max-width: 1200px;
@@ -539,7 +539,7 @@ h2 {
 
 @media (max-width: 768px) {
   .member-grid {
-    gap: 8px;
+    gap: 5px;
   }
   .comment-section {
     font-size: 1.3em;
