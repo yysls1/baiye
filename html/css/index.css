@@ -130,8 +130,8 @@ h2 {
    头像
 ====================== */
 .avatar {
-  width:clamp(50px, 12vw, 105px);
-  height: clamp(50px, 12vw, 105px);
+  width: 80%;
+  aspect-ratio: 1 / 1;
   border-radius: 12px;
   overflow: hidden;
   background: #111;
@@ -324,8 +324,8 @@ h2 {
    留言板
 ====================== */
 .comment-section {
-  width: clamp(90%, 1200px, 100%);
-  max-width: clamp(480px, 70%, 1200px); /* 最小480px，优先70%，最大1200px */
+  width: 100%;
+  max-width: 900px;
   margin: 40px auto 0;
   padding: 20px;
   background: linear-gradient(145deg, #1b1b1b, #101010);
