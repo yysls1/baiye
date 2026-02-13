@@ -5,14 +5,8 @@
 body {
   margin: 0;
   min-height: 100vh;
-
-  background:
-    linear-gradient(rgba(20, 20, 20, 0.753), rgba(20, 20, 20, 0.979)),
-    url("../img/baiyeBG.jpg") center / cover no-repeat;
-
   color: #fff;
   font-family: "Noto Serif SC", serif;
-
   padding: 40px 16px;
 }
 
@@ -218,16 +212,16 @@ h2 {
 ====================== */
 
 .register-panel {
-  display: none; /* 弹出时再改为 flex */
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(6px);
   z-index: 999;
-  display: flex;          /* ❤️ 必须加 */
+  display: none;
   align-items: center;
   justify-content: center;
 }
+
 
 
 .register-box {
@@ -289,14 +283,14 @@ h2 {
 }
 
 .ink-line {
-  width: clamp(150px, 80%, 350px); /* 屏幕小 → 200px, 屏幕中 → 80%, 屏幕大 → 800px */
-  height: clamp(2px, 80%, 5px);
+  width: clamp(150px, 80%, 350px);
+  height: 3px;
   margin: 20px auto;
   border-radius: 3px;
   background: linear-gradient(
     to right,
     rgba(255,215,0,0) 0%,
-    #dae44cb2 50%,
+    rgba(255,215,0,0.8) 50%,
     rgba(255,215,0,0) 100%
   );
 }
