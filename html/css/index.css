@@ -31,8 +31,17 @@ body {
 h1 {
   margin-bottom: 18px;
   letter-spacing: 3px;
-  font-size: 50px;
+  font-size: clamp(50px, 12vw, 105px);
   font-weight: 600;
+  color: #ffd700;
+  text-shadow: 0 0 12px rgba(255, 180, 0, 0.4);
+}
+
+h2 {
+  margin-bottom: 7px;
+  letter-spacing: 2px;
+  font-size: clamp(20px, 12vw, 45px);
+  font-weight: 250;
   color: #ffd700;
   text-shadow: 0 0 12px rgba(255, 180, 0, 0.4);
 }
@@ -42,12 +51,11 @@ h1 {
 ====================== */
 
 .member-title {
-  margin-bottom: 14px;
-  font-size: 28px;
+  margin-bottom: clamp(15px, 12vw, 35px);
+  font-size: clamp(35px, 12vw, 80px);
   color: #ffcc66;
   letter-spacing: 1px;
 }
-
 
 /* ======================
    玩家卡片
@@ -55,14 +63,14 @@ h1 {
 
 .member-grid {
   display: grid;
-  grid-template-columns: repeat(4, 102px); /* 固定 5 个列，每列宽度 82px */
-  gap: 30px;
+  grid-template-columns: repeat(4, clamp(90px, 12vw, 165px)); /* 固定 4 个列，每列宽度 102px */
+  gap: clamp(30px, 12vw, 80px);
   justify-content: center;   /* 整个 grid 居中 */
 }
 
 .member-card {
-  width: 85px;
-  height: 110px;
+  width:clamp(80px, 12vw, 165px);
+  height: clamp(100px, 12vw, 205px);
   background: linear-gradient(145deg, #1c1c1c, #141414);
   border-radius: 16px;
   padding: 8px;
@@ -91,7 +99,7 @@ h1 {
 }
 
 .name {
-  font-size: 15px;
+  font-size: clamp(15px, 12vw, 30px);
   margin-top: 4px;
   color: #f1d6a8;
   white-space: nowrap;
@@ -102,9 +110,9 @@ h1 {
 
 /* 添加卡片 */
 .add-card {
-  width: 82px;
-  height: 110px;
-  font-size: 28px;
+  width:clamp(80px, 12vw, 165px);
+  height: clamp(100px, 12vw, 205px);
+  font-size: clamp(30px, 12vw, 75px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -117,12 +125,13 @@ h1 {
 .add-card:hover {
   background: rgba(255,200,100,0.15);
 }
+
 /* ======================
    头像
 ====================== */
 .avatar {
-  width: 60px;
-  height: 60px;
+  width:clamp(50px, 12vw, 105px);
+  height: clamp(50px, 12vw, 105px);
   border-radius: 12px;
   overflow: hidden;
   background: #111;
@@ -137,9 +146,9 @@ h1 {
 }
 
 .id {
-  font-size: 15px;
+  font-size: clamp(15px, 12vw, 35px);
   color: #ffd700;
-  margin-top: 6px;
+  margin-top: clamp(5px, 12vw, 10px);
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
@@ -147,8 +156,7 @@ h1 {
 }
 
 .nickname {
-  font-size: 13px;
-  color: #ffd700;
+  font-size: clamp(12px, 12vw, 30px);
   color: #f1d6a8;
   text-align: center;
   white-space: nowrap;
@@ -158,15 +166,14 @@ h1 {
 }
 
 .role {
-  font-size: 11px;
+  font-size: clamp(11px, 12vw, 25px);
   color: #ffcc66;
   text-align: center;
   margin-top: 2px;
 }
 
-
 .member-card:hover .avatar img {
-  transform: scale(1.05);
+  transform: scale(1.1);
 }
 
 /* ======================
@@ -174,17 +181,16 @@ h1 {
 ====================== */
 
 .actions {
-  margin-top: 24px;
+  margin-top: clamp(25px, 12vw, 55px);
 }
-
 .actions button {
-  padding: 14px;
+  padding: clamp(15px, 12vw, 35px);
   width: 100%;
-  border-radius: 12px;
+  border-radius: clamp(15px, 12vw, 35px);
   border: none;
   cursor: pointer;
   font-weight: bold;
-  font-size: 15px;
+  font-size: clamp(15px, 12vw, 35px);
   color: #1a1a1a;
   background: linear-gradient(135deg, #ffd700, #ff9900);
   transition: 0.25s ease;
@@ -192,7 +198,7 @@ h1 {
 }
 
 .actions button:hover {
-  transform: translateY(-3px);
+  transform: translateY(-10px);
   box-shadow: 0 6px 18px rgba(255, 170, 0, 0.7);
 }
 
@@ -201,19 +207,21 @@ h1 {
 ====================== */
 
 .register-panel {
-  display: none;
+  display: none; /* 弹出时再改为 flex */
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(6px);
   z-index: 999;
+  display: flex;          /* ❤️ 必须加 */
   align-items: center;
   justify-content: center;
 }
 
+
 .register-box {
-  width: 90%;
-  max-width: 340px;
+  width: clamp(340px, 90%, 680px);
+  max-width: clamp(340px, 12vw, 680px);
   background: linear-gradient(145deg, #1c1c1c, #141414);
   border-radius: 18px;
   padding: 24px;
@@ -229,7 +237,7 @@ h1 {
 }
 
 .register-box input {
-  width: 100%;
+  width: 92%;
   padding: 12px;
   margin: 8px 0;
   border-radius: 8px;
@@ -270,14 +278,15 @@ h1 {
 }
 
 .ink-line {
-  width: 80px;
-  height: 2px;
-  margin: 12px auto 30px;
+  width: clamp(150px, 80%, 350px); /* 屏幕小 → 200px, 屏幕中 → 80%, 屏幕大 → 800px */
+  height: clamp(2px, 80%, 5px);
+  margin: 20px auto;
+  border-radius: 3px;
   background: linear-gradient(
     to right,
-    transparent,
-    rgba(0,0,0,0.6),
-    transparent
+    rgba(255,215,0,0) 0%,
+    #dae44cb2 50%,
+    rgba(255,215,0,0) 100%
   );
 }
 
@@ -306,16 +315,18 @@ h1 {
 
 .footer-mark {
   margin-top: 40px;
-  font-size: 12px;
+  font-size: clamp(25px, 80%, 60px);
   color: #777;
   letter-spacing: 3px;
 }
 
-/* 留言板整体 */
+/* ======================
+   留言板
+====================== */
 .comment-section {
-  width: 100%;
-  max-width: 380px;      
-  margin: 40px auto 0;   
+  width: clamp(90%, 1200px, 100%);
+  max-width: clamp(480px, 70%, 1200px); /* 最小480px，优先70%，最大1200px */
+  margin: 40px auto 0;
   padding: 20px;
   background: linear-gradient(145deg, #1b1b1b, #101010);
   border-radius: 20px;
@@ -323,12 +334,12 @@ h1 {
     0 8px 24px rgba(0,0,0,0.7),
     inset 0 0 12px rgba(255, 200, 0, 0.05);
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
 }
 
-/* 标题 */
+
 .comment-section h2 {
-  font-size: 20px;
+  font-size: clamp(20px, 90%, 50px);
   color: #ffd700;
   margin-bottom: 16px;
   letter-spacing: 1px;
@@ -336,12 +347,10 @@ h1 {
   text-shadow: 0 0 6px rgba(255, 215, 0, 0.8);
 }
 
-/* 输入框固定在标题下方 */
 .comment-input-wrapper {
   display: flex;
   gap: 10px;
   margin-bottom: 16px;
-  /* order: 默认，不需要 -1 */
 }
 
 .comment-input-wrapper input {
@@ -373,25 +382,23 @@ h1 {
 }
 
 .comment-input-wrapper button:hover {
-  transform: translateY(-2px);
+  transform: translateY(clamp(-2px, 90%, -5px));
   box-shadow: 0 6px 18px rgba(255, 180, 0, 0.7);
 }
 
-/* 留言列表 */
 .comment-list {
-  max-height: 480px;
+  max-height: clamp(480px, 90%, 900px);
   overflow-y: auto;
   display: flex;
-  flex-direction: column; /* ✅ 最新留言在上 */
-  gap: 14px;
+  flex-direction: column;
+  gap: clamp(14px, 90%, 30px);
   padding-right: 6px;
   scrollbar-width: thin;
   scrollbar-color: #ffd700 transparent;
 }
 
-/* 自定义滚动条 */
 .comment-list::-webkit-scrollbar {
-  width: 8px;
+  width: clamp(8px, 90%, 18px);
 }
 
 .comment-list::-webkit-scrollbar-thumb {
@@ -404,11 +411,10 @@ h1 {
   background: transparent;
 }
 
-/* 留言卡片 */
 .comment-card {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: clamp(14px, 90%, 30px);
   padding: 12px 16px;
   border-radius: 18px;
   background: linear-gradient(145deg, #1f1f1f, #141414);
@@ -422,10 +428,9 @@ h1 {
   box-shadow: 0 6px 20px rgba(0,0,0,0.6), inset 0 0 12px rgba(255,215,0,0.2);
 }
 
-/* 头像 */
 .comment-card .avatar {
-  width: 44px;
-  height: 44px;
+  width: clamp(44px, 90%, 90px);
+  height: clamp(44px, 90%, 90px);
   border-radius: 50%;
   overflow: hidden;
   flex: 0 0 44px;
@@ -444,7 +449,6 @@ h1 {
   transform: scale(1.1);
 }
 
-/* 内容 */
 .comment-card .comment-content {
   flex: 1;
   display: flex;
@@ -455,21 +459,21 @@ h1 {
 
 .comment-card .nickname {
   font-weight: bold;
-  font-size: 14px;
+  font-size: clamp(15px, 90%, 35px);
   margin-bottom: 2px;
   color: #ffd700;
   text-shadow: 0 0 4px rgba(255,215,0,0.5);
 }
 
 .comment-card .content {
-  font-size: 14px;
+  font-size:clamp(14px, 90%, 30px);
   color: #fff;
   line-height: 1.5;
   word-break: break-word;
 }
 
 .comment-card .time {
-  font-size: 11px;
+  font-size: clamp(10px, 90%, 25px);
   color: #aaa;
   margin-top: 4px;
   align-self: flex-end;
@@ -477,13 +481,42 @@ h1 {
 }
 
 .nickname-row {
-  display: flex;       /* 水平排列 */
-  align-items: center; /* 垂直居中 */
-  gap: 6px;            /* 昵称和称号间距 */
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .nickname-row .role {
-  font-size: 12px;
+  font-size: clamp(12px, 90%, 30px);
   color: #ffcc66;
-  white-space: nowrap;  /* 防止换行 */
+  white-space: nowrap;
+}
+
+@media (min-width: 1200px) {
+  .container {
+    zoom: 0.8; /* 缩小 80% */
+  }
+}
+
+
+/* ======================
+   留言板整体放大 50% (仅 PC)
+====================== */
+@media (min-width: 1024px) {
+  .comment-section {
+    font-size: 1.5em;       /* 所有文字放大 50% */
+    padding: 30px;           /* 扩大内边距 */
+  }
+  .comment-input-wrapper input,
+  .comment-input-wrapper button {
+    padding: 20px;          /* 输入框和按钮放大 */
+  }
+  .comment-card {
+    padding: 18px 24px;      /* 卡片内容放大 */
+    gap: 20px;
+  }
+  .comment-card .nickname,
+  .comment-card .content {
+    font-size: 1.5em;
+  }
 }

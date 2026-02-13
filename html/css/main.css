@@ -1,0 +1,14 @@
+/* =========================
+   本地引入 Zhi Mang Xing
+========================= */
+@font-face {
+  font-family: 'LongCang';
+  src: url('../fonts/LongCang.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* 全局应用字体 */
+body {
+  font-family: 'LongCang', sans-serif;
+}

@@ -4,9 +4,8 @@
   <meta charset="UTF-8">
   <title>剑卒过河 - 花名册</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500&display=swap" rel="stylesheet">
-
   <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -43,19 +42,22 @@
     </div>
     <div class="footer-mark">百业堂 · 江湖录</div>
     
-    <!-- 留言板 -->
-    <div class="comment-section">
-      <h2>留言板</h2>
+        <!-- 留言板外层 wrapper -->
+    <div class="comment-section-wrapper">
+      <div class="comment-section">
+        <h2>留言板</h2>
 
-      <!-- 输入框在上 -->
-      <div class="comment-input-wrapper">
-        <input id="commentInput" type="text" placeholder="请输入留言...">
-        <button onclick="sendComment()">发送</button>
+        <!-- 输入框在上 -->
+        <div class="comment-input-wrapper">
+          <input id="commentInput" type="text" placeholder="请输入留言...">
+          <button onclick="sendComment()">发送</button>
+        </div>
+
+        <!-- 留言列表在下 -->
+        <div id="commentList" class="comment-list"></div>
       </div>
-
-      <!-- 留言列表在下 -->
-      <div id="commentList" class="comment-list"></div>
     </div>
+
   </div>
 
   </div>
