@@ -520,3 +520,23 @@ h2 {
     font-size: 1.5em;
   }
 }
+
+
+@media (max-width: 767px) {
+  .comment-section {
+    font-size: 1.3em;
+    padding: 20px;
+  }
+  .comment-input-wrapper input,
+  .comment-input-wrapper button {
+    padding: 16px;
+  }
+  .comment-card {
+    padding: 14px 18px;
+    gap: 12px;
+  }
+  .comment-card .nickname,
+  .comment-card .content {
+    font-size: 1.2em;
+  }
+}
