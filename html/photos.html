@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户照片上传</title>
+  <link rel="stylesheet" href="css/photos.css">
+</head>
+<body>
+  <div class="photo-section">
+    <h2>照片墙</h2>
+
+    <!-- 上传区域 -->
+    <div class="photo-input-wrapper">
+      <input id="photoInput" type="file" accept="image/*">
+      <button id="uploadBtn">上传照片</button>
+    </div>
+
+    <!-- 照片列表 -->
+    <div id="photoList" class="photo-list"></div>
+  </div>
+
+    <!-- 引入 Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+
+    <!-- 初始化 Supabase -->
+    <script src="js/supabase.js"></script>
+
+    <!-- 业务逻辑 -->
+    <script src="js/photos.js"></script>
+
+</body>
+</html>
