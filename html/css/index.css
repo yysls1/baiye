@@ -532,11 +532,7 @@ h2 {
 }
 
 
-@media (max-width: 767px) {
-  .member-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-  }
+@media (max-width: 768px) {
 
   .comment-section {
     font-size: 1.3em;
