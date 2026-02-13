@@ -64,7 +64,7 @@ h2 {
 .member-grid {
   display: grid;
   grid-template-columns: repeat(4, clamp(90px, 12vw, 165px)); /* 固定 4 个列，每列宽度 102px */
-  gap: clamp(30px, 12vw, 80px);
+  gap: clamp(30px, 5vw, 80px);
   justify-content: center;   /* 整个 grid 居中 */
 }
 
@@ -146,7 +146,7 @@ h2 {
 }
 
 .id {
-  font-size: clamp(15px, 12vw, 35px);
+  font-size: clamp(10px, 3vw, 35px);
   color: #ffd700;
   margin-top: clamp(5px, 12vw, 10px);
   text-align: center;
@@ -156,7 +156,7 @@ h2 {
 }
 
 .nickname {
-  font-size: clamp(12px, 12vw, 30px);
+  font-size: clamp(8px, 3vw, 30px);
   color: #f1d6a8;
   text-align: center;
   white-space: nowrap;
@@ -166,7 +166,7 @@ h2 {
 }
 
 .role {
-  font-size: clamp(11px, 12vw, 25px);
+  font-size: clamp(7px, 3vw, 25px);
   color: #ffcc66;
   text-align: center;
   margin-top: 2px;
