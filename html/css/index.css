@@ -492,12 +492,7 @@ h2 {
   white-space: nowrap;
 }
 
-@media (min-width: 1200px) {
-  .container {
-    zoom: 0.8; /* 缩小 80% */
-  }
 
-}
 
 
 /* ======================
