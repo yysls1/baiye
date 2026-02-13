@@ -12,17 +12,18 @@ const client = window.supabase.createClient(
 const memberGrid = document.getElementById("memberGrid")
 const msg = document.getElementById("msg")
 const avatarInput = document.getElementById("avatarInput")
-
+const commentList = document.getElementById("commentList")
+const commentInput = document.getElementById("commentInput")
 
 /* ======================
-   加载花名册
+   花名册加载
 ====================== */
 async function loadMembers() {
   const { data: { user } } = await client.auth.getUser()
 
   const { data, error } = await client
     .from("baiye_members")
-    .select("id, nickname, avatar_url")
+    .select("id, username, nickname, avatar_url, role, priority")
     .order("created_at", { ascending: true })
 
   if (error) {
@@ -30,9 +31,11 @@ async function loadMembers() {
     return
   }
 
+  const sortedMembers = sortMembersByPriority(data) // 按 priority 排序
+
   memberGrid.innerHTML = ""
 
-  data.forEach(m => {
+  sortedMembers.forEach(m => {
     const div = document.createElement("div")
     div.className = "member-card"
 
@@ -49,7 +52,9 @@ async function loadMembers() {
       <div class="avatar">
         <img src="${avatarSrc}" alt="">
       </div>
-      <div class="name">${m.nickname || "未命名"}</div>
+      <div class="id">${m.username}</div>
+      ${m.nickname && m.nickname !== m.username ? `<div class="nickname">${m.nickname}</div>` : ""}
+      ${m.role ? `<div class="role">【${m.role}】</div>` : ""}
     `
 
     memberGrid.appendChild(div)
@@ -62,7 +67,30 @@ async function loadMembers() {
   memberGrid.appendChild(add)
 }
 
+// 按 priority 排序，priority 小的排前
+function sortMembersByPriority(members) {
+  return members.sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999))
+}
 
+// 获取显示名
+function getDisplayName(member) {
+  if (member.nickname && member.nickname !== member.username) {
+    return `${member.username}（${member.nickname}）`
+  } else {
+    return member.username
+  }
+}
+
+function getDisplayNameWithRole(member) {
+  let displayName = member.username;
+  if (member.nickname && member.nickname !== member.username) {
+    displayName += `<br><span class="nickname">${member.nickname}</span>`;
+  }
+  if (member.role) {
+    displayName += `<br><span class="role">【${member.role}】</span>`;
+  }
+  return displayName;
+}
 
 /* ======================
    注册
@@ -77,7 +105,6 @@ async function registerMember() {
     return
   }
 
-  // ✅ 生成随机邮箱
   const fakeEmail = `${crypto.randomUUID()}@jianzu.com`
 
   const { data, error } = await client.auth.signUp({
@@ -95,13 +122,14 @@ async function registerMember() {
     return
   }
 
-  // ✅ 保存 email 到自己的表
   const { error: insertError } = await client
     .from("baiye_members")
     .insert({
       id: data.user.id,
       nickname: nickname || username,
-      email: fakeEmail
+      username: username,
+      email: fakeEmail,
+      priority: 999 // 默认没有称号的优先级很低
     })
 
   if (insertError) {
@@ -110,7 +138,6 @@ async function registerMember() {
   }
 
   msg.innerText = "注册成功"
-
   closeRegister()
   await loadMembers()
 }
@@ -128,14 +155,13 @@ function closeRegister() {
 }
 
 /* ======================
-   头像上传（核心）
+   头像上传
 ====================== */
 avatarInput.onchange = async () => {
   const file = avatarInput.files[0]
   if (!file) return
 
   const { data: { user } } = await client.auth.getUser()
-
   if (!user) {
     alert("未登录")
     return
@@ -160,9 +186,11 @@ avatarInput.onchange = async () => {
     .eq("id", user.id)
 
   loadMembers()
-
 }
 
+/* ======================
+   登录弹窗
+====================== */
 let selectedLoginId = null
 
 function openLoginModal(userId) {
@@ -175,13 +203,10 @@ function closeLogin() {
   document.getElementById("loginPassword").value = ""
 }
 
-
 async function confirmLogin() {
   const password = document.getElementById("loginPassword").value.trim()
-
   if (!password) return
 
-  // 先查出该用户的 email
   const { data, error: fetchError } = await client
     .from("baiye_members")
     .select("email")
@@ -193,7 +218,6 @@ async function confirmLogin() {
     return
   }
 
-  // 用数据库里保存的 email 登录
   const { error } = await client.auth.signInWithPassword({
     email: data.email,
     password
@@ -208,18 +232,14 @@ async function confirmLogin() {
   loadMembers()
 }
 
-/* 
-Comment
-*/
-const commentList = document.getElementById("commentList")
-const commentInput = document.getElementById("commentInput")
-
-// 加载留言
+/* ======================
+   留言板
+====================== */
 async function loadComments() {
   const { data: comments, error } = await client
     .from("baiye_comments")
     .select("id, user_id, nickname, content, created_at")
-    .order("created_at", { ascending: false }) // 最新留言在数组最前
+    .order("created_at", { ascending: false })
 
   if (error) {
     console.error("加载留言失败:", error.message)
@@ -229,13 +249,27 @@ async function loadComments() {
   commentList.innerHTML = ""
 
   for (const c of comments) {
+    // 获取成员信息
     let avatarUrl = "img/default-avatar.png"
+    let role = ""
+    let username = c.nickname || "未命名"
+
     const { data: memberData } = await client
       .from("baiye_members")
-      .select("avatar_url")
+      .select("avatar_url, role, username")
       .eq("id", c.user_id)
       .single()
-    if (memberData && memberData.avatar_url) avatarUrl = memberData.avatar_url
+
+    if (memberData) {
+      if (memberData.avatar_url) avatarUrl = memberData.avatar_url
+      if (memberData.role) role = memberData.role
+      username = memberData.username || username
+    }
+
+    // 构建显示内容
+    const displayName = c.nickname && c.nickname !== username
+      ? `${username}（${c.nickname}）`
+      : username
 
     const div = document.createElement("div")
     div.className = "comment-card"
@@ -244,7 +278,10 @@ async function loadComments() {
         <img src="${avatarUrl}" alt="avatar">
       </div>
       <div class="comment-content">
-        <div class="nickname">${c.nickname || "未命名"}</div>
+        <div class="nickname-row">
+          <span class="nickname">${displayName}</span>
+          ${role ? `<span class="role">【${role}】</span>` : ""}
+        </div>
         <div class="content">${c.content}</div>
         <div class="time">${new Date(c.created_at).toLocaleString()}</div>
       </div>
@@ -255,25 +292,22 @@ async function loadComments() {
   commentList.scrollTop = 0
 }
 
-// 不要再重新声明 commentInput，直接用已有的
 commentInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
-    e.preventDefault();
-    sendComment();
+    e.preventDefault()
+    sendComment()
   }
-});
+})
 
-// 发送留言
 async function sendComment() {
-  const content = commentInput.value.trim();
-  if (!content) return alert("请输入留言内容");
+  const content = commentInput.value.trim()
+  if (!content) return alert("请输入留言内容")
 
-  const { data: { user } } = await client.auth.getUser();
-  if (!user) return alert("请先登录才能留言");
+  const { data: { user } } = await client.auth.getUser()
+  if (!user) return alert("请先登录才能留言")
 
-  const nickname = await getMyNickname() || "未命名";
+  const nickname = await getMyNickname() || "未命名"
 
-  // 1️⃣ 先插入数据库
   const { data, error } = await client
     .from("baiye_comments")
     .insert({
@@ -281,17 +315,15 @@ async function sendComment() {
       nickname,
       content
     })
-    .select()  // 返回插入的数据
-    .single(); // 单条数据
+    .select()
+    .single()
 
-  if (error) return alert("留言失败: " + error.message);
+  if (error) return alert("留言失败: " + error.message)
 
-  // 2️⃣ 清空输入框
-  commentInput.value = "";
+  commentInput.value = ""
 
-  // 3️⃣ 在本地直接添加最新留言到顶部，避免重新拉取全部
-  const div = document.createElement("div");
-  div.className = "comment-card";
+  const div = document.createElement("div")
+  div.className = "comment-card"
   div.innerHTML = `
     <div class="avatar">
       <img src="${await getMyAvatar()}" alt="avatar">
@@ -301,8 +333,8 @@ async function sendComment() {
       <div class="content">${content}</div>
       <div class="time">${new Date().toLocaleString()}</div>
     </div>
-  `;
-  commentList.prepend(div); // 最新留言在上
+  `
+  commentList.prepend(div)
 }
 
 async function getMyAvatar() {
@@ -310,11 +342,10 @@ async function getMyAvatar() {
     .from("baiye_members")
     .select("avatar_url")
     .eq("id", (await client.auth.getUser()).data.user.id)
-    .single();
-  return (data && data.avatar_url) || "img/default-avatar.png";
+    .single()
+  return (data && data.avatar_url) || "img/default-avatar.png"
 }
 
-// 获取昵称
 async function getMyNickname() {
   const { data, error } = await client
     .from("baiye_members")
@@ -329,13 +360,10 @@ async function getMyNickname() {
    初始化
 ====================== */
 document.addEventListener("DOMContentLoaded", async () => {
-  // 页面初始加载
   await loadMembers()
-  await loadComments()  // <- 加这一行
+  await loadComments()
 
-  // 监听登录 / 登出状态变化
-  client.auth.onAuthStateChange((event, session) => {
+  client.auth.onAuthStateChange(() => {
     loadMembers()
   })
 })
-

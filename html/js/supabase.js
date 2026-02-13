@@ -1,12 +1,8 @@
-// js/supabase.js
+// supabase.js
+const SUPABASE_URL = "https://sdkrumvzefqgcrnomesm.supabase.co";
+const SUPABASE_KEY = "sb_publishable_dGKp0d2Se_-jJz1JReK24A_Qfv4S5yE";
 
-// 先检查 supabase 是否已加载
-if (typeof supabase === "undefined") {
-  console.error("Supabase JS 未加载，请检查 <script src='...supabase.min.js'></script> 的顺序");
-} else {
-  const SUPABASE_URL = "https://sdkrumvzefqgcrnomesm.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_dGKp0d2Se_-jJz1JReK24A_Qfv4S5yE";
+// 等官方 supabase.min.js 加载完后再创建 client
+window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // 全局 client
-  window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-}
+console.log("Supabase client 已初始化 ✅");

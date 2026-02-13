@@ -45,6 +45,7 @@ body {
   color: #111;
   font-weight: bold;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .photo-input-wrapper button:hover {
@@ -52,47 +53,81 @@ body {
   box-shadow: 0 6px 16px rgba(255,170,0,0.7);
 }
 
+/* 照片列表 */
 .photo-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  max-height: 400px;
+  gap: 100px;
   overflow-y: auto;
+  padding-right: 4px;
 }
 
-.photo-card {
+/* 单条照片贴文 */
+.photo-post {
+  width: 100%;
   background: linear-gradient(145deg, #1e1e1e, #141414);
-  padding: 8px;
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 0 6px rgba(255,215,0,0.05);
+  overflow: hidden;
+  animation: fadeIn 0.3s ease forwards;
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
-.photo-card img {
-  width: 100%;
-  border-radius: 8px;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.photo-card .info {
+/* 照片头部：昵称+称号+时间 */
+.photo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  font-size: 25px;
+  color: #fff;
+  background: rgba(0,0,0,0.15);
+}
+
+.display-name {
+  font-weight: bold;
+}
+
+.time {
   font-size: 12px;
   color: #aaa;
 }
 
-.photo-card .actions {
-  display: flex;
-  gap: 8px;
+/* 照片主体 */
+.photo-img {
+  width: 100%;
+  height: auto;      /* 高度自适应图片 */
+  object-fit: cover;
+  display: block;
 }
-.photo-card .actions button {
-  padding: 4px 8px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  background: #222;
+
+/* 花名和称号 */
+.nickname-row {
+  font-size: 13px;
   color: #ffd700;
-  font-size: 12px;
+  margin-right: 6px;
 }
-.photo-card .actions button:hover {
-  background: #333;
+
+.role {
+  color: #ff9900;
+  font-weight: bold;
+}
+
+/* 响应式 */
+@media (max-width: 480px) {
+  .photo-section {
+    margin: 20px 8px;
+    padding: 12px;
+  }
+  .photo-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
 }
