@@ -496,11 +496,6 @@ h2 {
   .container {
     zoom: 0.8; /* 缩小 80% */
   }
-  .member-grid {
-    grid-template-columns: repeat(4, 180px);
-    justify-content: center;
-    gap: 40px;
-  }
 }
 
 
