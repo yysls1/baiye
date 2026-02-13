@@ -110,8 +110,8 @@ h2 {
 
 /* 添加卡片 */
 .add-card {
-  width:clamp(80px, 12vw, 165px);
-  height: clamp(100px, 12vw, 205px);
+  width: 70%;
+  aspect-ratio: 4 / 5;
   font-size: clamp(30px, 12vw, 75px);
   display: flex;
   align-items: center;
