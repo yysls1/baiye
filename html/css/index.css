@@ -8,21 +8,32 @@ body {
 
   background:
     linear-gradient(rgba(20, 20, 20, 0.753), rgba(20, 20, 20, 0.979)),
-    url("../img/baiyeBG.jpg")center / cover fixed no-repeat;
+    url("../img/baiyeBG.jpg") center / cover no-repeat;
 
   color: #fff;
   font-family: "Noto Serif SC", serif;
-  display: flex;
-  justify-content: center;
+
   padding: 40px 16px;
+}
+
+.hero-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+
+  background:
+    linear-gradient(rgba(20,20,20,0.75), rgba(20,20,20,0.95)),
+    url("../img/baiyeBG.jpg") center / cover no-repeat;
 }
 
 
 .container {
   width: 100%;
   max-width: 1200px;
+  margin: 0 auto;
   text-align: center;
 }
+
 
 /* ======================
    标题 （剑卒过河）
@@ -498,6 +509,14 @@ h2 {
 /* ======================
    留言板整体放大 50% (仅 PC)
 ====================== */
+@media (min-width: 1200px) {
+  .member-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
+
 @media (min-width: 1024px) {
   .member-grid {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
