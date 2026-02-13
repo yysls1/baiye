@@ -20,7 +20,7 @@ body {
 
 .container {
   width: 100%;
-  max-width: 460px;
+  max-width: 1200px;
   text-align: center;
 }
 
@@ -63,8 +63,8 @@ h2 {
 
 .member-grid {
   display: grid;
+  gap: 20px;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 14px;
   justify-content: center;   /* 整个 grid 居中 */
 }
 
