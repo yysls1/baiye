@@ -91,7 +91,7 @@ h2 {
 }
 
 .member-card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-20px);
   box-shadow:
     0 8px 18px rgba(0, 0, 0, 0.8),
     0 0 12px rgba(255, 180, 0, 0.2);
