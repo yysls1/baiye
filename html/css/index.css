@@ -63,8 +63,8 @@ h2 {
 
 .member-grid {
   display: grid;
-  grid-template-columns: repeat(4, clamp(90px, 12vw, 165px)); /* 固定 4 个列，每列宽度 102px */
-  gap: clamp(30px, 5vw, 80px);
+  grid-template-columns: repeat(3, 1fr);  /* 手机 3 列 */
+  gap: 14px;
   justify-content: center;   /* 整个 grid 居中 */
 }
 
@@ -496,6 +496,11 @@ h2 {
   .container {
     zoom: 0.8; /* 缩小 80% */
   }
+  .member-grid {
+    grid-template-columns: repeat(4, 180px);
+    justify-content: center;
+    gap: 40px;
+  }
 }
 
 
@@ -503,6 +508,11 @@ h2 {
    留言板整体放大 50% (仅 PC)
 ====================== */
 @media (min-width: 1024px) {
+  .member-grid {
+    grid-template-columns: repeat(4, 180px);
+    justify-content: center;
+    gap: 40px;
+  }
   .comment-section {
     font-size: 1.5em;       /* 所有文字放大 50% */
     padding: 30px;           /* 扩大内边距 */
@@ -523,6 +533,11 @@ h2 {
 
 
 @media (max-width: 767px) {
+  .member-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+
   .comment-section {
     font-size: 1.3em;
     padding: 20px;
