@@ -196,7 +196,11 @@ export async function initHome() {
   /* ======================
      留言板
   ===================== */
-  async function loadComments() {
+  /* ======================
+   留言板加载
+====================== */
+async function loadComments() {
+  try {
     const { data: comments, error } = await window.supabaseClient
       .from("baiye_comments")
       .select("id, user_id, nickname, content, created_at")
@@ -208,23 +212,27 @@ export async function initHome() {
     }
 
     commentList.innerHTML = "";
+    if (!comments || comments.length === 0) return;
 
+    // 批量获取所有 user_id 的用户信息
+    const userIds = [...new Set(comments.map(c => c.user_id))];
+    const { data: members, error: memberError } = await window.supabaseClient
+      .from("baiye_members")
+      .select("id, avatar_url, role, username")
+      .in("id", userIds);
+
+    if (memberError) console.warn("加载用户信息失败:", memberError.message);
+
+    // 建立 Map
+    const memberMap = new Map();
+    (members || []).forEach(m => memberMap.set(m.id, m));
+
+    // 渲染留言
     for (const c of comments) {
-      let avatarUrl = "img/default-avatar.png";
-      let role = "";
-      let username = c.nickname || "未命名";
-
-      const { data: memberData } = await window.supabaseClient
-        .from("baiye_members")
-        .select("avatar_url, role, username")
-        .eq("id", c.user_id)
-        .maybeSingle();
-
-      if (memberData) {
-        if (memberData.avatar_url) avatarUrl = memberData.avatar_url;
-        if (memberData.role) role = memberData.role;
-        username = memberData.username || username;
-      }
+      const memberData = memberMap.get(c.user_id) || {};
+      const avatarUrl = memberData.avatar_url || "img/default-avatar.png";
+      const role = memberData.role || "";
+      const username = memberData.username || c.nickname || "未命名";
 
       const displayName = c.nickname && c.nickname !== username
         ? `${username}（${c.nickname}）`
@@ -248,17 +256,23 @@ export async function initHome() {
       commentList.appendChild(div);
     }
 
+    // 滚动到顶部或底部，根据需要调整
     commentList.scrollTop = 0;
-  }
 
-  commentInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      sendComment();
+  } catch (err) {
+    if (err.name === "AbortError") {
+      console.log("加载留言请求被取消");
+    } else {
+      console.error("加载留言出现异常:", err);
     }
-  });
+  }
+}
 
-  async function sendComment() {
+/* ======================
+   发送留言
+====================== */
+async function sendComment() {
+  try {
     const content = commentInput.value.trim();
     if (!content) return alert("请输入留言内容");
 
@@ -266,6 +280,7 @@ export async function initHome() {
     if (!user) return alert("请先登录才能留言");
 
     const nickname = await getMyNickname() || "未命名";
+    const avatarUrl = await getMyAvatar();
 
     const { error } = await window.supabaseClient
       .from("baiye_comments")
@@ -275,11 +290,12 @@ export async function initHome() {
 
     commentInput.value = "";
 
+    // 新留言直接渲染到最上面
     const div = document.createElement("div");
     div.className = "comment-card";
     div.innerHTML = `
       <div class="avatar">
-        <img src="${await getMyAvatar()}" alt="avatar">
+        <img src="${avatarUrl}" alt="avatar">
       </div>
       <div class="comment-content">
         <div class="nickname">${nickname}</div>
@@ -288,25 +304,44 @@ export async function initHome() {
       </div>
     `;
     commentList.prepend(div);
-  }
 
-  async function getMyAvatar() {
+  } catch (err) {
+    console.error("发送留言异常:", err);
+  }
+}
+
+/* ======================
+   获取用户头像
+====================== */
+async function getMyAvatar() {
+  try {
     const { data } = await window.supabaseClient
       .from("baiye_members")
       .select("avatar_url")
       .eq("id", (await window.supabaseClient.auth.getUser()).data.user.id)
       .maybeSingle();
     return (data && data.avatar_url) || "img/default-avatar.png";
+  } catch {
+    return "img/default-avatar.png";
   }
+}
 
-  async function getMyNickname() {
+/* ======================
+   获取用户昵称
+====================== */
+async function getMyNickname() {
+  try {
     const { data } = await window.supabaseClient
       .from("baiye_members")
       .select("nickname")
       .eq("id", (await window.supabaseClient.auth.getUser()).data.user.id)
       .maybeSingle();
     return data?.nickname || null;
+  } catch {
+    return null;
   }
+}
+
 
   /* ======================
      初始化
