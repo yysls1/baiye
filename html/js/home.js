@@ -13,6 +13,7 @@ export async function initHome() {
 
   if (!memberGrid || !commentList || !commentInput || !avatarInput || !msg || !sendBtn) return;
 
+  
   /* ======================
      花名册加载
   ===================== */
@@ -74,32 +75,37 @@ export async function initHome() {
       return;
     }
 
-    const { data: existingUser } = await window.supabaseClient
-      .from("baiye_members")
-      .select("id")
-      .eq("username", username)
-      .maybeSingle();
+    try {
+      const { data: existingUser } = await window.supabaseClient
+        .from("baiye_members")
+        .select("id")
+        .eq("username", username)
+        .maybeSingle();
 
-    if (existingUser) {
-      msg.innerText = "该用户名已被注册";
-      return;
+      if (existingUser) {
+        msg.innerText = "该用户名已被注册";
+        return;
+      }
+
+      const fakeEmail = `${crypto.randomUUID()}@jianzu.com`;
+      const { data, error } = await window.supabaseClient.auth.signUp({ email: fakeEmail, password });
+      if (error) return void (msg.innerText = error.message);
+
+      await window.supabaseClient.from("baiye_members").insert({
+        id: data.user.id,
+        nickname: nickname || username,
+        username,
+        email: fakeEmail,
+        priority: 999
+      });
+
+      msg.innerText = "注册成功";
+      closeRegister();
+      await loadMembers();
+    } catch (err) {
+      console.error("注册异常:", err);
+      msg.innerText = "注册失败，请重试";
     }
-
-    const fakeEmail = `${crypto.randomUUID()}@jianzu.com`;
-    const { data, error } = await window.supabaseClient.auth.signUp({ email: fakeEmail, password });
-    if (error) return void (msg.innerText = error.message);
-
-    await window.supabaseClient.from("baiye_members").insert({
-      id: data.user.id,
-      nickname: nickname || username,
-      username,
-      email: fakeEmail,
-      priority: 999
-    });
-
-    msg.innerText = "注册成功";
-    closeRegister();
-    loadMembers();
   }
 
   function openRegister() { document.getElementById("registerPanel").style.display = "flex"; }
@@ -114,16 +120,21 @@ export async function initHome() {
     const { data: { user } } = await window.supabaseClient.auth.getUser();
     if (!user) return alert("未登录");
 
-    const ext = file.name.split(".").pop();
-    const filePath = `${user.id}/avatar_${Date.now()}.${ext}`;
+    try {
+      const ext = file.name.split(".").pop();
+      const filePath = `${user.id}/avatar_${Date.now()}.${ext}`;
 
-    const { error: uploadError } = await window.supabaseClient.storage.from("avatars").upload(filePath, file);
-    if (uploadError) return alert(uploadError.message);
+      const { error: uploadError } = await window.supabaseClient.storage.from("avatars").upload(filePath, file);
+      if (uploadError) return alert(uploadError.message);
 
-    const { data } = window.supabaseClient.storage.from("avatars").getPublicUrl(filePath);
-    await window.supabaseClient.from("baiye_members").update({ avatar_url: data.publicUrl + "?t=" + Date.now() }).eq("id", user.id);
+      const { data } = window.supabaseClient.storage.from("avatars").getPublicUrl(filePath);
+      await window.supabaseClient.from("baiye_members").update({ avatar_url: data.publicUrl + "?t=" + Date.now() }).eq("id", user.id);
 
-    loadMembers();
+      await loadMembers();
+    } catch (err) {
+      console.error("上传头像失败:", err);
+      alert("头像上传失败");
+    }
   };
 
   /* ======================
@@ -137,34 +148,32 @@ export async function initHome() {
     const password = document.getElementById("loginPassword").value.trim();
     if (!password) return;
 
-    const { data, error: fetchError } = await window.supabaseClient.from("baiye_members").select("email").eq("id", selectedLoginId).maybeSingle();
-    if (fetchError || !data) return alert("用户不存在");
+    try {
+      const { data, error: fetchError } = await window.supabaseClient.from("baiye_members").select("email").eq("id", selectedLoginId).maybeSingle();
+      if (fetchError || !data) return alert("用户不存在");
 
-    const { error } = await window.supabaseClient.auth.signInWithPassword({ email: data.email, password });
-    if (error) return alert("密码错误");
+      const { error } = await window.supabaseClient.auth.signInWithPassword({ email: data.email, password });
+      if (error) return alert("密码错误");
 
-    document.getElementById("loginModal").style.display = "none";
-    loadMembers();
+      document.getElementById("loginModal").style.display = "none";
+      await loadMembers();
+    } catch (err) {
+      console.error("登录异常:", err);
+      alert("登录失败，请重试");
+    }
   }
 
   /* ======================
      留言板
   ===================== */
-  let commentController = null;
-
   async function loadComments() {
     try {
-      if (commentController) commentController.abort();
-      commentController = new AbortController();
-
       const { data: comments, error } = await window.supabaseClient
         .from("baiye_comments")
         .select("id, user_id, nickname, content, created_at")
-        .order("created_at", { ascending: false })
-        .abortSignal(commentController.signal);
+        .order("created_at", { ascending: false });
 
       if (error) return console.error("加载留言失败:", error.message);
-
       commentList.innerHTML = "";
       if (!comments || comments.length === 0) return;
 
@@ -177,7 +186,7 @@ export async function initHome() {
       const memberMap = new Map();
       (members || []).forEach(m => memberMap.set(m.id, m));
 
-      for (const c of comments) {
+      comments.forEach(c => {
         const m = memberMap.get(c.user_id) || {};
         const avatarUrl = m.avatar_url || "img/default-avatar.png";
         const role = m.role || "";
@@ -198,14 +207,10 @@ export async function initHome() {
           </div>
         `;
         commentList.appendChild(div);
-      }
-
+      });
       commentList.scrollTop = 0;
     } catch (err) {
-      if (err.name === "AbortError") console.log("加载留言请求被取消 ✅");
-      else console.error("加载留言异常:", err);
-    } finally {
-      commentController = null;
+      console.error("加载留言异常:", err);
     }
   }
 
@@ -213,50 +218,61 @@ export async function initHome() {
     const content = commentInput.value.trim();
     if (!content) return alert("请输入留言内容");
 
-    const { data: { user } } = await window.supabaseClient.auth.getUser();
-    if (!user) return alert("请先登录才能留言");
+    try {
+      const { data: { user } } = await window.supabaseClient.auth.getUser();
+      if (!user) return alert("请先登录才能留言");
 
-    const nickname = await getMyNickname() || "未命名";
+      const nickname = await getMyNickname() || "未命名";
 
-    const { error } = await window.supabaseClient.from("baiye_comments").insert({
-      user_id: user.id,
-      nickname,
-      content
-    });
-    if (error) return alert("留言失败: " + error.message);
+      const { error } = await window.supabaseClient.from("baiye_comments").insert({
+        user_id: user.id,
+        nickname,
+        content
+      });
+      if (error) return alert("留言失败: " + error.message);
 
-    commentInput.value = "";
-    loadComments(); // 更新留言列表
+      commentInput.value = "";
+      await loadComments(); // 更新留言列表
+    } catch (err) {
+      console.error("发送留言异常:", err);
+      alert("发送留言失败");
+    }
   }
 
   sendBtn.addEventListener("click", sendComment);
-  commentInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); sendComment(); } });
-
-  /* ======================
-     获取用户头像
-  ===================== */
-  async function getMyAvatar() {
-    try {
-      const { data } = await window.supabaseClient.from("baiye_members")
-        .select("avatar_url")
-        .eq("id", (await window.supabaseClient.auth.getUser()).data.user.id)
-        .maybeSingle();
-      return (data && data.avatar_url) || "img/default-avatar.png";
-    } catch { return "img/default-avatar.png"; }
-  }
+  commentInput.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); sendComment(); } });
 
   /* ======================
      获取用户昵称
   ===================== */
   async function getMyNickname() {
     try {
+      const { data: { user } } = await window.supabaseClient.auth.getUser();
+      if (!user) return null;
+
       const { data } = await window.supabaseClient.from("baiye_members")
         .select("nickname")
-        .eq("id", (await window.supabaseClient.auth.getUser()).data.user.id)
+        .eq("id", user.id)
         .maybeSingle();
       return data?.nickname || null;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   }
+
+// 留言板发送
+sendBtn.addEventListener("click", sendComment);
+commentInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    sendComment();
+  }
+});
+
+// 注册按钮
+const registerBtn = document.getElementById("registerBtn");
+registerBtn.addEventListener("click", registerMember);
+
 
   /* ======================
      初始化
