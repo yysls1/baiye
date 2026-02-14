@@ -2,77 +2,30 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>剑卒过河 - 花名册</title>
+  <title>剑卒过河 - SPA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="css/home.css">
   <link rel="stylesheet" href="css/main.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
-
 <body>
-  <div class="hero-bg"></div>
-  <div class="container">
-    <h1>剑卒过河</h1>
-    <div class="ink-line"></div>
+  <!-- BGM 开关按钮 -->
+  <button id="bgmToggleBtn">🎵</button>
 
-    <!-- 花名册 -->
-    <div class="member-title">花名册</div>
-    <div class="member-grid" id="memberGrid"></div>
+  <header>
+  </header>
 
-    <!-- 登录弹窗 -->
-    <div id="loginModal" class="register-panel" style="display:none;">
-      <div class="register-box">
-        <h2>🔐 输入密令</h2>
-        <input id="loginPassword" type="password" placeholder="输入密码">
-        <button onclick="confirmLogin()">登录</button>
-        <button class="secondary" onclick="closeLogin()">取消</button>
-      </div>
-    </div>
+  <main id="app">
+    <!-- SPA 页面内容会加载在这里 -->
+  </main>
 
-    <!-- 头像上传（隐藏） -->
-    <input
-      type="file"
-      id="avatarInput"
-      accept="image/*"
-      style="display:none"
-    />
-
-    <!-- 功能入口 -->
-    <div class="actions">
-      <button onclick="location.href='photos.html'">🧑‍🤝‍🧑 进入照片集</button>
-    </div>
-    <div class="footer-mark">百业堂 · 江湖录</div>
-    
-        <!-- 留言板外层 wrapper -->
-    <div class="comment-section-wrapper">
-      <div class="comment-section">
-        <h2>留言板</h2>
-
-        <!-- 输入框在上 -->
-        <div class="comment-input-wrapper">
-          <input id="commentInput" type="text" placeholder="请输入留言...">
-          <button onclick="sendComment()">发送</button>
-        </div>
-
-        <!-- 留言列表在下 -->
-        <div id="commentList" class="comment-list"></div>
-      </div>
-    </div>
-
- 
-    
-    <!-- 注册弹层 -->
-    <div class="register-panel" id="registerPanel" style="display:none;">
-      <div class="register-box">
-        <h2>📜 百业入册 </h2>
-      <input id="userId" placeholder="游戏ID（中文）">
-      <input id="pin" placeholder="6 位数字密码" maxlength="6">
-      <input id="nickname" placeholder="花名（可选）">
-      <button onclick="registerMember()">注册</button>
-      <button class="secondary" onclick="closeRegister()">取消</button>
-      <p id="msg"></p>
-    </div>
-
-  <script src="js/index.js"></script>
+  <!-- BGM -->
+  <audio id="bgm" src="music/bgm.mp3" loop></audio>
+  
+  <!-- 加载 Supabase JS SDK -->
+  <script type="module" src="js/supabase.js"></script>
+  <script type="module" src="js/home.js"></script>
+  <script type="module" src="js/photos.js"></script>
+  <script type="module" src="js/index.js"></script>
 </body>
 </html>

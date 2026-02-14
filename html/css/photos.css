@@ -237,3 +237,35 @@ body {
   background: #222;
   color: #ffd700;
 }
+
+#backBtn {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1000;
+  padding: 8px 14px;
+  font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #ffd700, #ff9900);
+  color: #1a1a1a;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 180, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+#backBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 180, 0.7);
+}
+
+/* 手机适配 */
+@media (max-width: 480px) {
+  #backBtn {
+    top: 10px;
+    left: 10px;
+    font-size: 14px;
+    padding: 6px 12px;
+  }
+}
