@@ -199,13 +199,19 @@ export async function initHome() {
   /* ======================
    留言板加载
 ====================== */
+let commentAbortController = null;
+
 async function loadComments() {
+  if (commentAbortController) commentAbortController.abort(); // 取消上一次请求
+  commentAbortController = new AbortController();
+
   try {
     const { data: comments, error } = await window.supabaseClient
       .from("baiye_comments")
       .select("id, user_id, nickname, content, created_at")
-      .order("created_at", { ascending: false });
-
+      .order("created_at", { ascending: false })
+      .abortSignal(commentAbortController.signal); // <-- 注意这里
+    
     if (error) {
       console.error("加载留言失败:", error.message);
       return;
@@ -214,36 +220,26 @@ async function loadComments() {
     commentList.innerHTML = "";
     if (!comments || comments.length === 0) return;
 
-    // 批量获取所有 user_id 的用户信息
     const userIds = [...new Set(comments.map(c => c.user_id))];
-    const { data: members, error: memberError } = await window.supabaseClient
+    const { data: members } = await window.supabaseClient
       .from("baiye_members")
       .select("id, avatar_url, role, username")
       .in("id", userIds);
 
-    if (memberError) console.warn("加载用户信息失败:", memberError.message);
-
-    // 建立 Map
     const memberMap = new Map();
     (members || []).forEach(m => memberMap.set(m.id, m));
 
-    // 渲染留言
     for (const c of comments) {
       const memberData = memberMap.get(c.user_id) || {};
       const avatarUrl = memberData.avatar_url || "img/default-avatar.png";
       const role = memberData.role || "";
       const username = memberData.username || c.nickname || "未命名";
-
-      const displayName = c.nickname && c.nickname !== username
-        ? `${username}（${c.nickname}）`
-        : username;
+      const displayName = c.nickname && c.nickname !== username ? `${username}（${c.nickname}）` : username;
 
       const div = document.createElement("div");
       div.className = "comment-card";
       div.innerHTML = `
-        <div class="avatar">
-          <img src="${avatarUrl}" alt="avatar">
-        </div>
+        <div class="avatar"><img src="${avatarUrl}" alt="avatar"></div>
         <div class="comment-content">
           <div class="nickname-row">
             <span class="nickname">${displayName}</span>
@@ -255,18 +251,17 @@ async function loadComments() {
       `;
       commentList.appendChild(div);
     }
-
-    // 滚动到顶部或底部，根据需要调整
     commentList.scrollTop = 0;
 
   } catch (err) {
     if (err.name === "AbortError") {
-      console.log("加载留言请求被取消");
+      console.log("加载留言请求被取消 ✅");
     } else {
-      console.error("加载留言出现异常:", err);
+      console.error("加载留言异常:", err);
     }
   }
 }
+
 
 /* ======================
    发送留言
@@ -280,7 +275,6 @@ async function sendComment() {
     if (!user) return alert("请先登录才能留言");
 
     const nickname = await getMyNickname() || "未命名";
-    const avatarUrl = await getMyAvatar();
 
     const { error } = await window.supabaseClient
       .from("baiye_comments")
@@ -290,13 +284,10 @@ async function sendComment() {
 
     commentInput.value = "";
 
-    // 新留言直接渲染到最上面
     const div = document.createElement("div");
     div.className = "comment-card";
     div.innerHTML = `
-      <div class="avatar">
-        <img src="${avatarUrl}" alt="avatar">
-      </div>
+      <div class="avatar"><img src="${await getMyAvatar()}" alt="avatar"></div>
       <div class="comment-content">
         <div class="nickname">${nickname}</div>
         <div class="content">${content}</div>
@@ -306,9 +297,21 @@ async function sendComment() {
     commentList.prepend(div);
 
   } catch (err) {
-    console.error("发送留言异常:", err);
+    if (err.name === "AbortError") {
+      console.log("发送留言请求被取消 ✅");
+    } else {
+      console.error("发送留言异常:", err);
+    }
   }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (!window.homeInitialized) {
+    initHome();
+    window.homeInitialized = true;
+  }
+});
+
 
 /* ======================
    获取用户头像
