@@ -98,6 +98,9 @@ export async function initPhotos(){
      添加单张照片
   ===================== */
   async function addPhotoToList(photo, isNew = false) {
+    
+    const { data: { user } } = await window.supabaseClient.auth.getUser();
+
     const displayName = getDisplayNameWithRole(photo);
     const photoId = photo.id;
 
@@ -106,22 +109,35 @@ export async function initPhotos(){
     div.innerHTML = `
       <div class="photo-header">
         <span class="display-name">${displayName}</span>
+
+        ${user && user.id === photo.user_id ? `
+          <div class="owner-actions">
+            <button class="edit-btn">编辑</button>
+            <button class="delete-btn">删除</button>
+          </div>
+        ` : ""}
+
         <span class="time">${new Date(photo.uploaded_at).toLocaleString()}</span>
       </div>
-        <div class="photo-title">${photo.title || ""}</div>
-        <img class="photo-img" src="${photo.photo_url}" alt="photo">
-        <div class="photo-actions">
-          <button class="like-btn">
-            <span class="like-icon">❤︎</span>
-            <span class="like-count"></span>
-          </button>
+
+      <div class="photo-title">${photo.title || ""}</div>
+
+      <img class="photo-img" src="${photo.photo_url}" alt="photo">
+
+      <div class="photo-actions">
+        <button class="like-btn">
+          <span class="like-icon">❤︎</span>
+          <span class="like-count"></span>
+        </button>
       </div>
+
       <div class="photo-comments">
         <div class="comments-list"></div>
         <input class="comment-input" type="text" placeholder="写评论..." />
         <button class="comment-btn">发送</button>
       </div>
     `;
+
 
     if (isNew) {
       photoList.prepend(div);
@@ -130,12 +146,12 @@ export async function initPhotos(){
     }
 
     const likeBtn = div.querySelector(".like-btn");
+    const editBtn = div.querySelector(".edit-btn");
+    const deleteBtn = div.querySelector(".delete-btn");
     const likeCountSpan = div.querySelector(".like-count");
     const commentsList = div.querySelector(".comments-list");
     const commentInput = div.querySelector(".comment-input");
     const commentBtn = div.querySelector(".comment-btn");
-
-    const { data: { user } } = await window.supabaseClient.auth.getUser();
 
     /* ===== 加载点赞数 ===== */
 
@@ -151,24 +167,24 @@ export async function initPhotos(){
     }
 
     async function loadLikes() {
-  const { count } = await window.supabaseClient
-    .from("likes")
-    .select("*", { count: "exact", head: true })
-    .eq("photo_id", photoId);
+      const { count } = await window.supabaseClient
+        .from("likes")
+        .select("*", { count: "exact", head: true })
+        .eq("photo_id", photoId);
 
-  likeCountSpan.textContent = count || 0;
+      likeCountSpan.textContent = count || 0;
 
-  const liked = await checkIfLiked();
-  const iconSpan = div.querySelector(".like-icon");
+      const liked = await checkIfLiked();
+      const iconSpan = div.querySelector(".like-icon");
 
-  if (liked) {
-    iconSpan.textContent = "❤";
-    likeBtn.classList.add("liked");
-  } else {
-    iconSpan.textContent = "⁠♡";
-    likeBtn.classList.remove("liked");
-  }
-}
+      if (liked) {
+        iconSpan.textContent = "❤";
+        likeBtn.classList.add("liked");
+      } else {
+        iconSpan.textContent = "⁠♡";
+        likeBtn.classList.remove("liked");
+      }
+    }
 
 
     /* ===== 加载评论 ===== */
@@ -195,6 +211,43 @@ export async function initPhotos(){
 
     if (!user) return;
 
+      //deletePost  & edit
+  if (deleteBtn) {
+    deleteBtn.addEventListener("click", async () => {
+      const confirmDelete = confirm("确定删除这条帖子？");
+      if (!confirmDelete) return;
+
+      await window.supabaseClient
+        .from("photos")
+        .delete()
+        .eq("id", photoId);
+
+      div.remove();
+    });
+  }
+
+    if (editBtn) {
+    editBtn.addEventListener("click", async () => {
+
+      const newTitle = prompt("修改标题：", photo.title);
+      if (!newTitle) return;
+
+      const { error } = await window.supabaseClient
+        .from("photos")
+        .update({ title: newTitle })
+        .eq("id", photoId);
+
+      if (error) {
+        alert("修改失败");
+        return;
+      }
+
+      // 更新页面显示
+      const titleDiv = div.querySelector(".photo-title");
+      titleDiv.textContent = newTitle;
+    });
+  }
+  
     /* ===== 点赞 ===== */
     likeBtn.addEventListener("click", async () => {
 
@@ -271,8 +324,6 @@ export async function initPhotos(){
       modal.classList.remove("active");
     }
   });
-
-
 
 
   /* ======================

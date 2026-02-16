@@ -94,12 +94,21 @@ body {
 }
 
 .display-name {
+  font-size: 20px;
   font-weight: bold;
+  margin-right: auto;
+}
+
+/* 编辑删除在时间左边 */
+.owner-actions {
+  display: flex;
+  gap: 8px;
+  margin-right: 12px; /* 和时间留点距离 */
 }
 
 .time {
-  font-size: 12px;
-  color: #aaa;
+  font-size: 14px;
+  opacity: 0.6;
 }
 
 /* 照片主体 */
@@ -334,10 +343,40 @@ body {
 
 /*标题*/
 .photo-title {
-  font-size: 20px;
+  font-size: 35px;
   font-weight: bold;
   padding: 4px 16px 12px;
   background: linear-gradient(90deg, #ffd700, #ff9900);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+
+.photo-owner-actions {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 8px;
+}
+
+.photo-owner-actions button {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(4px);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.edit-btn,
+.delete-btn {
+  background: rgba(255, 255, 255, 0.507);
+  border: 1px solid #ffffff;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.edit-btn {
+  color: rgb(0, 0, 0);
+}
+.delete-btn {
+  color: rgb(255, 0, 0);
 }
