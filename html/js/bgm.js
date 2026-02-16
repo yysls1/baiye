@@ -1,29 +1,56 @@
-// SPA BGM 管理器
+// SPA BGM 管理器（随机播放版）
 export const BGMManager = (() => {
+
   let bgm = null;
   let isPlaying = false;
 
+  const playlist = [
+    "music/bgm1.mp3",
+    "music/bgm2.mp3",
+    "music/bgm3.mp3"
+  ];
+
+  let currentIndex = -1;
+
+  // 生成一个新的随机索引（避免连续重复）
+  function getRandomIndex() {
+    let newIndex;
+    do {
+      newIndex = Math.floor(Math.random() * playlist.length);
+    } while (newIndex === currentIndex && playlist.length > 1);
+    return newIndex;
+  }
+
   function init() {
-    if (bgm) return; // 已经初始化过
+    if (bgm) return;
+
     bgm = document.createElement("audio");
     bgm.id = "bgm";
-    bgm.src = "music/bgm.mp3";
-    bgm.loop = true;
     bgm.volume = 0.5;
     document.body.appendChild(bgm);
 
-    // 用户第一次点击页面就播放 BGM
-    const tryPlay = () => {
+    function playRandom() {
+      currentIndex = getRandomIndex();
+      bgm.src = playlist[currentIndex];
       bgm.play()
-        .then(() => { 
+        .then(() => {
           isPlaying = true;
-          console.log("BGM 开始播放 🎵");
+          console.log("正在播放:", playlist[currentIndex]);
         })
-        .catch(err => {
-          console.log("BGM 播放被阻止，需要用户交互", err);
-        });
+        .catch(() => {});
+    }
+
+    // 播放结束 → 再随机一首
+    bgm.addEventListener("ended", () => {
+      playRandom();
+    });
+
+    // 用户第一次点击后开始播放
+    const tryPlay = () => {
+      playRandom();
       document.removeEventListener("click", tryPlay);
     };
+
     document.addEventListener("click", tryPlay);
   }
 
@@ -44,4 +71,5 @@ export const BGMManager = (() => {
   }
 
   return { init, play, pause, setVolume };
+
 })();
