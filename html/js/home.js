@@ -83,7 +83,7 @@ export async function initHome() {
         .maybeSingle();
 
       if (existingUser) {
-        msg.innerText = "同ID只能注册一次！比比巴布";
+        msg.innerText = "同ID只能注册一次！比比拉布";
         return;
       }
 
