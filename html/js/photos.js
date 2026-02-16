@@ -186,6 +186,31 @@ export async function initPhotos(){
     return displayName;
   }
 
+
+  //放大图片
+  const modal = document.getElementById("imageModal");
+  const modalImg = document.getElementById("modalImg");
+
+  // 点击图片放大
+  document.addEventListener("click", function (e) {
+    if (e.target.classList.contains("photo-img")) {
+      modalImg.src = e.target.src;
+      modal.classList.add("active");
+    }
+  });
+
+  // 点击遮罩或图片本身关闭
+  modal.addEventListener("click", function () {
+    modal.classList.remove("active");
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      modal.classList.remove("active");
+    }
+  });
+
+
   /* ======================
      页面初始化
   ===================== */
