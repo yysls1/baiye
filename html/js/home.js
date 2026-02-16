@@ -83,7 +83,7 @@ export async function initHome() {
         .maybeSingle();
 
       if (existingUser) {
-        msg.innerText = "该用户名已被注册";
+        msg.innerText = "同ID只能注册一次！比比巴布";
         return;
       }
 
@@ -99,7 +99,7 @@ export async function initHome() {
         priority: 999
       });
 
-      msg.innerText = "注册成功";
+      msg.innerText = "注册成功！蒸棒！";
       closeRegister();
       await loadMembers();
     } catch (err) {
@@ -153,7 +153,7 @@ export async function initHome() {
       if (fetchError || !data) return alert("用户不存在");
 
       const { error } = await window.supabaseClient.auth.signInWithPassword({ email: data.email, password });
-      if (error) return alert("密码错误");
+      if (error) return alert("密码...不记得了吗？！（真忘记了找社主)");
 
       document.getElementById("loginModal").style.display = "none";
       await loadMembers();
@@ -220,7 +220,7 @@ export async function initHome() {
 
     try {
       const { data: { user } } = await window.supabaseClient.auth.getUser();
-      if (!user) return alert("请先登录才能留言");
+      if (!user) return alert("你都没登陆...留个damn");
 
       const nickname = await getMyNickname() || "未命名";
 

@@ -16,11 +16,11 @@ export async function initPhotos(){
 
     const titleInput = document.getElementById("photoTitle");
     const title = titleInput.value.trim();
-    if (!title) return alert("标题不能为空");
+    if (!title) return alert("标题没写...不 通 过");
 
     const { data: userData } = await window.supabaseClient.auth.getUser();
     const user = userData.user;
-    if (!user) return alert("请先登录");
+    if (!user) return alert("你都没登录！返回主页");
 
     const fileName = Date.now() + "-" + file.name;
 
@@ -133,7 +133,7 @@ export async function initPhotos(){
 
       <div class="photo-comments">
         <div class="comments-list"></div>
-        <input class="comment-input" type="text" placeholder="写评论..." />
+        <input class="comment-input" type="text" placeholder="写点好的...(比如称赞社主)" />
         <button class="comment-btn">发送</button>
       </div>
     `;
@@ -214,7 +214,7 @@ export async function initPhotos(){
       //deletePost  & edit
   if (deleteBtn) {
     deleteBtn.addEventListener("click", async () => {
-      const confirmDelete = confirm("确定删除这条帖子？");
+      const confirmDelete = confirm("确定要删？找不回的喔");
       if (!confirmDelete) return;
 
       await window.supabaseClient
@@ -229,7 +229,7 @@ export async function initPhotos(){
     if (editBtn) {
     editBtn.addEventListener("click", async () => {
 
-      const newTitle = prompt("修改标题：", photo.title);
+      const newTitle = prompt("又改？！修改标题：", photo.title);
       if (!newTitle) return;
 
       const { error } = await window.supabaseClient
