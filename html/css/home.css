@@ -1,6 +1,12 @@
 /* ======================
    全局
 ====================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 
 body {
   margin: 0;
@@ -359,6 +365,7 @@ h2 {
 }
 
 .comment-input-wrapper input {
+  min-width: 0;
   flex: 1;
   padding: 14px;
   border-radius: 16px;
