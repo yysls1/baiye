@@ -359,6 +359,7 @@ h2 {
 }
 
 .comment-input-wrapper {
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -368,7 +369,7 @@ h2 {
 .comment-input-wrapper input {
   min-width: 0;
   flex: 1;
-  padding: 14px;
+  padding: 10px 12px;
   border-radius: 16px;
   border: 1px solid rgba(255, 215, 0, 0.3);
   outline: none;
@@ -376,7 +377,7 @@ h2 {
   color: #fff;
   box-shadow: 0 0 8px rgba(255, 215, 0, 0.2) inset;
   transition: all 0.3s ease;
-  font-size: 10px;
+  font-size: 18px;
 
 }
 
