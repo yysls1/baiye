@@ -117,23 +117,23 @@ export async function initPhotos(){
           </div>
         ` : ""}
 
-        <span class="time">${new Date(photo.uploaded_at).toLocaleString()}</span>
-      </div>
-
-      <div class="photo-title">${photo.title || ""}</div>
-
-      <img class="photo-img" src="${photo.photo_url}" alt="photo">
-
-      <div class="photo-actions">
+        </div>
+        
+        <div class="photo-title">${photo.title || ""}</div>
+        
+        <img class="photo-img" src="${photo.photo_url}" alt="photo">
+        
+        <div class="photo-actions">
         <button class="like-btn">
-          <span class="like-icon">❤︎</span>
-          <span class="like-count"></span>
+        <span class="like-icon">❤︎</span>
+        <span class="like-count"></span>
         </button>
-      </div>
+        <span class="time">${new Date(photo.uploaded_at).toLocaleString()}</span>
+        </div>
 
       <div class="photo-comments">
         <div class="comments-list"></div>
-        <input class="comment-input" type="text" placeholder="写点好的...(比如称赞社主)" />
+        <input class="comment-input" type="text" placeholder="留个言呗..." />
         <button class="comment-btn">发送</button>
       </div>
     `;

@@ -368,6 +368,8 @@ h2 {
   color: #fff;
   box-shadow: 0 0 8px rgba(255, 215, 0, 0.2) inset;
   transition: all 0.3s ease;
+  font-size: 20px;
+
 }
 
 .comment-input-wrapper input:focus {
