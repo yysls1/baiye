@@ -7,7 +7,8 @@ export const BGMManager = (() => {
   const playlist = [
     "music/bgm1.mp3",
     "music/bgm2.mp3",
-    "music/bgm3.mp3"
+    "music/bgm3.mp3",
+    "music/bgm4.mp3"
   ];
 
   let currentIndex = -1;
