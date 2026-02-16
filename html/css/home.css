@@ -360,9 +360,9 @@ h2 {
 
 .comment-input-wrapper {
   display: flex;
-  gap: 5px;
-  margin-bottom: 16px;
-  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
 }
 
 .comment-input-wrapper input {
@@ -376,7 +376,7 @@ h2 {
   color: #fff;
   box-shadow: 0 0 8px rgba(255, 215, 0, 0.2) inset;
   transition: all 0.3s ease;
-  font-size: 20px;
+  font-size: 10px;
 
 }
 
@@ -385,6 +385,7 @@ h2 {
 }
 
 .comment-input-wrapper button {
+  flex-shrink: 0;  /* 不被压缩 */
   padding: 14px 20px;
   border: none;
   border-radius: 16px;
