@@ -362,6 +362,7 @@ h2 {
   display: flex;
   gap: 5px;
   margin-bottom: 16px;
+  min-width: 0;
 }
 
 .comment-input-wrapper input {
