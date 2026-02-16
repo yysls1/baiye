@@ -522,7 +522,6 @@ h2 {
     max-width: 1200px;
   }
   .comment-section {
-    font-size: 1.5em;       /* 所有文字放大 50% */
     padding: 30px;           /* 扩大内边距 */
   }
   .comment-input-wrapper input,
@@ -535,7 +534,7 @@ h2 {
   }
   .comment-card .nickname,
   .comment-card .content {
-    font-size: 1.5em;
+    font-size: 1.2em;
   }
 }
 
@@ -545,8 +544,7 @@ h2 {
     gap: 5px;
   }
   .comment-section {
-    font-size: 1.3em;
-    padding: 20px;
+    padding: 10px;
   }
   .comment-input-wrapper input,
   .comment-input-wrapper button {
@@ -561,3 +559,29 @@ h2 {
     font-size: 1.2em;
   }
 }
+
+@media (max-width: 480px) {
+
+  .comment-card .nickname {
+    font-size: 14px;
+  }
+
+  .comment-card {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .comment-card .content {
+    font-size: 14px;
+  }
+
+  .comment-card .time {
+    font-size: 11px;
+  }
+
+  .nickname-row .role {
+    font-size: 11px;
+  }
+
+}
+
