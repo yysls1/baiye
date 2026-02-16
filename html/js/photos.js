@@ -10,35 +10,53 @@ export async function initPhotos(){
   const photoList=document.getElementById("photoList");
   if(!photoList) return;
 
-  uploadBtn?.addEventListener("click", async ()=>{
-    const file = photoInput.files[0]; if(!file) return alert("请选择照片");
+  uploadBtn.addEventListener("click", async () => {
+    const file = photoInput.files[0];
+    if (!file) return;
 
-    const { data:{user}, error:userError } = await window.supabaseClient.auth.getUser();
-    if(userError||!user) return alert("请先登录才能上传照片");
+    const titleInput = document.getElementById("photoTitle");
+    const title = titleInput.value.trim();
+    if (!title) return alert("标题不能为空");
 
-    const { data: memberData, error: memberError } = await window.supabaseClient.from("baiye_members").select("nickname, role, username").eq("id", user.id).maybeSingle();
-    if(memberError||!memberData) return alert("获取用户信息失败");
+    const { data: userData } = await window.supabaseClient.auth.getUser();
+    const user = userData.user;
+    if (!user) return alert("请先登录");
 
-    const nickname=memberData.nickname||memberData.username;
-    const role=memberData.role||"";
-    const username=memberData.username||user.id;
+    const fileName = Date.now() + "-" + file.name;
 
-    const timestamp=Date.now();
-    const ext=file.name.split(".").pop();
-    const filePath=`${user.id}/photos/${timestamp}.${ext}`;
+    const { error: uploadError } =
+      await window.supabaseClient.storage
+        .from("photos")
+        .upload(fileName, file);
 
-    const { error: uploadError } = await window.supabaseClient.storage.from("user-photos").upload(filePath,file,{cacheControl:'3600',upsert:false});
-    if(uploadError) return alert("上传失败: "+uploadError.message);
+    if (uploadError) return alert("上传失败");
 
-    const { data: urlData } = window.supabaseClient.storage.from("user-photos").getPublicUrl(filePath);
-    const photo_url=urlData.publicUrl;
+    const photo_url =
+      window.supabaseClient.storage
+        .from("photos")
+        .getPublicUrl(fileName).data.publicUrl;
 
-    const { data: insertedPhoto, error: insertError } = await window.supabaseClient.from("photos").insert({ user_id:user.id, photo_url, uploaded_at: new Date().toISOString() }).select().maybeSingle();
-    if(insertError) return alert("数据库保存失败: "+insertError.message);
+    const { data: insertedPhoto, error: insertError } =
+      await window.supabaseClient
+        .from("photos")
+        .insert({
+          user_id: user.id,
+          photo_url,
+          title,
+          uploaded_at: new Date().toISOString()
+        })
+        .select()
+        .maybeSingle();
 
-    photoInput.value="";
-    await addPhotoToList({ ...insertedPhoto, username, nickname, role }, true);
+    if (insertError) return alert("保存失败");
+
+    // 👇👇👇 就写在这里
+    titleInput.value = "";
+    photoInput.value = "";
+
+    addPhotoToList(insertedPhoto, true);
   });
+
 
   /* ======================
      加载所有照片
@@ -90,10 +108,13 @@ export async function initPhotos(){
         <span class="display-name">${displayName}</span>
         <span class="time">${new Date(photo.uploaded_at).toLocaleString()}</span>
       </div>
-      <img class="photo-img" src="${photo.photo_url}" alt="photo">
-      <div class="photo-actions">
-        <button class="like-btn">❤️ 点赞</button>
-        <span class="like-count">0</span>
+        <div class="photo-title">${photo.title || ""}</div>
+        <img class="photo-img" src="${photo.photo_url}" alt="photo">
+        <div class="photo-actions">
+          <button class="like-btn">
+            <span class="like-icon">❤︎</span>
+            <span class="like-count"></span>
+          </button>
       </div>
       <div class="photo-comments">
         <div class="comments-list"></div>
@@ -117,14 +138,38 @@ export async function initPhotos(){
     const { data: { user } } = await window.supabaseClient.auth.getUser();
 
     /* ===== 加载点赞数 ===== */
-    async function loadLikes() {
-      const { count } = await window.supabaseClient
-        .from("likes")
-        .select("*", { count: "exact", head: true })
-        .eq("photo_id", photoId);
 
-      likeCountSpan.textContent = count || 0;
+    async function checkIfLiked() {
+      const { data } = await window.supabaseClient
+        .from("likes")
+        .select("*")
+        .eq("photo_id", photoId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      return !!data;
     }
+
+    async function loadLikes() {
+  const { count } = await window.supabaseClient
+    .from("likes")
+    .select("*", { count: "exact", head: true })
+    .eq("photo_id", photoId);
+
+  likeCountSpan.textContent = count || 0;
+
+  const liked = await checkIfLiked();
+  const iconSpan = div.querySelector(".like-icon");
+
+  if (liked) {
+    iconSpan.textContent = "❤";
+    likeBtn.classList.add("liked");
+  } else {
+    iconSpan.textContent = "⁠♡";
+    likeBtn.classList.remove("liked");
+  }
+}
+
 
     /* ===== 加载评论 ===== */
     async function loadComments() {
@@ -152,12 +197,29 @@ export async function initPhotos(){
 
     /* ===== 点赞 ===== */
     likeBtn.addEventListener("click", async () => {
-      await window.supabaseClient.from("likes").upsert(
-        { photo_id: photoId, user_id: user.id },
-        { onConflict: ['photo_id', 'user_id'] }
-      );
+
+      const liked = await checkIfLiked();
+
+      if (liked) {
+        // 已点赞 → 删除
+        await window.supabaseClient
+          .from("likes")
+          .delete()
+          .eq("photo_id", photoId)
+          .eq("user_id", user.id);
+      } else {
+        // 未点赞 → 插入
+        await window.supabaseClient
+          .from("likes")
+          .insert({
+            photo_id: photoId,
+            user_id: user.id
+          });
+      }
+
       await loadLikes();
     });
+
 
     /* ===== 评论 ===== */
     commentBtn.addEventListener("click", async () => {
@@ -209,6 +271,8 @@ export async function initPhotos(){
       modal.classList.remove("active");
     }
   });
+
+
 
 
   /* ======================

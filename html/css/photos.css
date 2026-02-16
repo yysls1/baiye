@@ -86,18 +86,12 @@ body {
 
 /* 照片头部：昵称+称号+时间 */
 .photo-header {
-  position: absolute;
-  top: 0;
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px 4px;
   font-size: 14px;
 }
-
-.photo-post {
-  position: relative;
-}
-
 
 .display-name {
   font-weight: bold;
@@ -141,13 +135,18 @@ body {
   }
 }
 
-.photo-actions {
-  padding: 12px;
+.like-btn {
   font-size: 18px;
 }
 
-.like-btn {
-  font-size: 20px;
+.like-btn.liked {
+  color: red;
+}
+
+.like-count {
+  font-size: 22px;
+  font-weight: bold;
+  color: #ffd700;
 }
 
 
@@ -189,23 +188,27 @@ body {
 .photo-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  font-size: 14px;
+  gap: 12px;
+  padding: 10px 16px;
+  font-size: 18px;   /* 关键：整体放大 */
+  font-weight: 500;
   color: #fff;
 }
 
 .photo-actions button {
   background: #222;
   border: none;
-  border-radius: 8px;
-  padding: 4px 12px;
+  border-radius: 20px;
+  padding: 6px 14px;
   cursor: pointer;
   color: #ffd700;
+  font-size: 16px;
+  transition: all 0.2s ease;
 }
 
 .photo-actions button:hover {
   background: #333;
+  transform: scale(1.05);
 }
 
 .photo-comments {
@@ -327,4 +330,14 @@ body {
 @keyframes zoomIn {
   from { transform: scale(0.85); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
+}
+
+/*标题*/
+.photo-title {
+  font-size: 20px;
+  font-weight: bold;
+  padding: 4px 16px 12px;
+  background: linear-gradient(90deg, #ffd700, #ff9900);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
