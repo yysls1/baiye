@@ -1,3 +1,4 @@
+import supabase from "./supabase.js";
 /* ======================
    Home 页面逻辑
 ====================== */
@@ -19,8 +20,8 @@ export async function initHome() {
   ===================== */
   async function loadMembers() {
     try {
-      const { data: { user } } = await window.supabaseClient.auth.getUser();
-      const { data, error } = await window.supabaseClient
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data, error } = await supabase
         .from("baiye_members")
         .select("id, username, nickname, avatar_url, role, priority")
         .order("created_at", { ascending: true });
@@ -76,7 +77,7 @@ export async function initHome() {
     }
 
     try {
-      const { data: existingUser } = await window.supabaseClient
+      const { data: existingUser } = await supabase
         .from("baiye_members")
         .select("id")
         .eq("username", username)
@@ -88,10 +89,10 @@ export async function initHome() {
       }
 
       const fakeEmail = `${crypto.randomUUID()}@jianzu.com`;
-      const { data, error } = await window.supabaseClient.auth.signUp({ email: fakeEmail, password });
+      const { data, error } = await supabase.auth.signUp({ email: fakeEmail, password });
       if (error) return void (msg.innerText = error.message);
 
-      await window.supabaseClient.from("baiye_members").insert({
+      await supabase.from("baiye_members").insert({
         id: data.user.id,
         nickname: nickname || username,
         username,
@@ -117,18 +118,18 @@ export async function initHome() {
   avatarInput.onchange = async () => {
     const file = avatarInput.files[0];
     if (!file) return;
-    const { data: { user } } = await window.supabaseClient.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return alert("未登录");
 
     try {
       const ext = file.name.split(".").pop();
       const filePath = `${user.id}/avatar_${Date.now()}.${ext}`;
 
-      const { error: uploadError } = await window.supabaseClient.storage.from("avatars").upload(filePath, file);
+      const { error: uploadError } = await supabase.storage.from("avatars").upload(filePath, file);
       if (uploadError) return alert(uploadError.message);
 
-      const { data } = window.supabaseClient.storage.from("avatars").getPublicUrl(filePath);
-      await window.supabaseClient.from("baiye_members").update({ avatar_url: data.publicUrl + "?t=" + Date.now() }).eq("id", user.id);
+      const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      await supabase.from("baiye_members").update({ avatar_url: data.publicUrl + "?t=" + Date.now() }).eq("id", user.id);
 
       await loadMembers();
     } catch (err) {
@@ -149,10 +150,10 @@ export async function initHome() {
     if (!password) return;
 
     try {
-      const { data, error: fetchError } = await window.supabaseClient.from("baiye_members").select("email").eq("id", selectedLoginId).maybeSingle();
+      const { data, error: fetchError } = await supabase.from("baiye_members").select("email").eq("id", selectedLoginId).maybeSingle();
       if (fetchError || !data) return alert("用户不存在");
 
-      const { error } = await window.supabaseClient.auth.signInWithPassword({ email: data.email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email: data.email, password });
       if (error) return alert("密码...不记得了吗？！（真忘记了找社主)");
 
       document.getElementById("loginModal").style.display = "none";
@@ -168,7 +169,7 @@ export async function initHome() {
   ===================== */
   async function loadComments() {
     try {
-      const { data: comments, error } = await window.supabaseClient
+      const { data: comments, error } = await supabase
         .from("baiye_comments")
         .select("id, user_id, nickname, content, created_at")
         .order("created_at", { ascending: false });
@@ -178,7 +179,7 @@ export async function initHome() {
       if (!comments || comments.length === 0) return;
 
       const userIds = [...new Set(comments.map(c => c.user_id))];
-      const { data: members } = await window.supabaseClient
+      const { data: members } = await supabase
         .from("baiye_members")
         .select("id, avatar_url, role, username")
         .in("id", userIds);
@@ -219,12 +220,12 @@ export async function initHome() {
     if (!content) return alert("请输入留言内容");
 
     try {
-      const { data: { user } } = await window.supabaseClient.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return alert("你都没登陆...留个damn");
 
       const nickname = await getMyNickname() || "未命名";
 
-      const { error } = await window.supabaseClient.from("baiye_comments").insert({
+      const { error } = await supabase.from("baiye_comments").insert({
         user_id: user.id,
         nickname,
         content
@@ -247,10 +248,10 @@ export async function initHome() {
   ===================== */
   async function getMyNickname() {
     try {
-      const { data: { user } } = await window.supabaseClient.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      const { data } = await window.supabaseClient.from("baiye_members")
+      const { data } = await supabase.from("baiye_members")
         .select("nickname")
         .eq("id", user.id)
         .maybeSingle();
@@ -279,7 +280,7 @@ registerBtn.addEventListener("click", registerMember);
   ===================== */
   await loadMembers();
   await loadComments();
-  window.supabaseClient.auth.onAuthStateChange(() => loadMembers());
+  supabase.auth.onAuthStateChange(() => loadMembers());
 
   window.registerMember = registerMember;
   window.openRegister = openRegister;

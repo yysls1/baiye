@@ -1,4 +1,4 @@
-
+import supabase from "./supabase.js";
 /* ======================
    Photos 页面逻辑
 ====================== */
@@ -18,26 +18,26 @@ export async function initPhotos(){
     const title = titleInput.value.trim();
     if (!title) return alert("标题没写...不 通 过");
 
-    const { data: userData } = await window.supabaseClient.auth.getUser();
+    const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
     if (!user) return alert("你都没登录！返回主页");
 
     const fileName = Date.now() + "-" + file.name;
 
     const { error: uploadError } =
-      await window.supabaseClient.storage
+      await supabase.storage
         .from("photos")
         .upload(fileName, file);
 
     if (uploadError) return alert("上传失败");
 
     const photo_url =
-      window.supabaseClient.storage
+      supabase.storage
         .from("photos")
         .getPublicUrl(fileName).data.publicUrl;
 
     const { data: insertedPhoto, error: insertError } =
-      await window.supabaseClient
+      await supabase
         .from("photos")
         .insert({
           user_id: user.id,
@@ -62,7 +62,7 @@ export async function initPhotos(){
      加载所有照片
   ===================== */
   async function loadPhotos() {
-    const { data: photos, error } = await window.supabaseClient
+    const { data: photos, error } = await supabase
       .from("photos")
       .select("*")
       .order("uploaded_at", { ascending: false });
@@ -75,7 +75,7 @@ export async function initPhotos(){
     photoList.innerHTML = "";
 
     for (const photo of photos) {
-      const { data: memberData } = await window.supabaseClient
+      const { data: memberData } = await supabase
         .from("baiye_members")
         .select("username, nickname, role")
         .eq("id", photo.user_id)
@@ -99,7 +99,7 @@ export async function initPhotos(){
   ===================== */
   async function addPhotoToList(photo, isNew = false) {
     
-    const { data: { user } } = await window.supabaseClient.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
     const displayName = getDisplayNameWithRole(photo);
     const photoId = photo.id;
@@ -156,7 +156,7 @@ export async function initPhotos(){
     /* ===== 加载点赞数 ===== */
 
     async function checkIfLiked() {
-      const { data } = await window.supabaseClient
+      const { data } = await supabase
         .from("likes")
         .select("*")
         .eq("photo_id", photoId)
@@ -167,7 +167,7 @@ export async function initPhotos(){
     }
 
     async function loadLikes() {
-      const { count } = await window.supabaseClient
+      const { count } = await supabase
         .from("likes")
         .select("*", { count: "exact", head: true })
         .eq("photo_id", photoId);
@@ -189,7 +189,7 @@ export async function initPhotos(){
 
     /* ===== 加载评论 ===== */
     async function loadComments() {
-      const { data: comments } = await window.supabaseClient
+      const { data: comments } = await supabase
         .from("comments")
         .select("*, baiye_members(username,nickname)")
         .eq("photo_id", photoId)
@@ -217,7 +217,7 @@ export async function initPhotos(){
       const confirmDelete = confirm("确定要删？找不回的喔");
       if (!confirmDelete) return;
 
-      await window.supabaseClient
+      await supabase
         .from("photos")
         .delete()
         .eq("id", photoId);
@@ -232,7 +232,7 @@ export async function initPhotos(){
       const newTitle = prompt("又改？！修改标题：", photo.title);
       if (!newTitle) return;
 
-      const { error } = await window.supabaseClient
+      const { error } = await supabase
         .from("photos")
         .update({ title: newTitle })
         .eq("id", photoId);
@@ -255,14 +255,14 @@ export async function initPhotos(){
 
       if (liked) {
         // 已点赞 → 删除
-        await window.supabaseClient
+        await supabase
           .from("likes")
           .delete()
           .eq("photo_id", photoId)
           .eq("user_id", user.id);
       } else {
         // 未点赞 → 插入
-        await window.supabaseClient
+        await supabase
           .from("likes")
           .insert({
             photo_id: photoId,
@@ -279,7 +279,7 @@ export async function initPhotos(){
       const text = commentInput.value.trim();
       if (!text) return;
 
-      await window.supabaseClient.from("comments").insert({
+      await supabase.from("comments").insert({
         photo_id: photoId,
         user_id: user.id,
         comment_text: text
