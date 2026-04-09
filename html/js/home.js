@@ -268,8 +268,7 @@ export async function initHome() {
       alert("发送留言失败");
     }
   }
-
-  sendBtn.addEventListener("click", sendComment);
+  sendBtn.onclick = sendComment;
   commentInput.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); sendComment(); } });
 
   /* ======================
@@ -396,7 +395,6 @@ registerBtn.addEventListener("click", registerMember);
         const { data: { user } } = await supabase.auth.getUser();
 
         if (user && newComment.user_id === user.id) {
-          await loadComments();
           return;
         }
         showToast("💬 有新留言！");
@@ -445,7 +443,6 @@ registerBtn.addEventListener("click", registerMember);
     return data;
   }
 
-
   /* ======================
      初始化
   ===================== */
@@ -463,36 +460,52 @@ registerBtn.addEventListener("click", registerMember);
   window.sendComment = sendComment;
 
   console.log("Home 页面初始化完成 ✅");
+    /* ======================
+      页面恢复机制（最终稳定版）
+    ====================== */
 
-  document.addEventListener("visibilitychange", async () => {
-    if (document.visibilityState === "visible") {
-      console.log("👀 回来 → 重建一切");
+    // 🔥 核心恢复函数（唯一入口）
+    async function recoverApp() {
+      console.log("🔄 强制恢复中...");
 
       try {
-        // ✅ 0️⃣ 强制恢复 session（关键！！）
         await supabase.auth.refreshSession();
+        await supabase.auth.getUser();
 
-        // 1️⃣ 断掉旧连接
+        // 重建 realtime
         if (realtimeChannel) {
           supabase.removeChannel(realtimeChannel);
           realtimeChannel = null;
         }
-
-        // 2️⃣ 清缓存
-        memberCache.clear();
-
-        // 3️⃣ 重新拉用户（防止 user null）
-        await supabase.auth.getUser();
-
-        // 4️⃣ 重连 realtime
         setupRealtime();
 
-        // 5️⃣ 刷新数据
+        // 清缓存
+        memberCache.clear();
+
+        // ❗防止 UI 不同步
+        await loadMembers();
         await loadComments();
 
+        console.log("✅ 恢复完成");
       } catch (e) {
         console.error("恢复失败:", e);
       }
     }
-  });
+    // ✅ 切回页面（最常用）
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        recoverApp();
+      }
+    });
+
+    // ✅ iOS / Safari 必备（有时候只触发这个）
+    window.addEventListener("focus", () => {
+      recoverApp();
+    });
+
+    window.addEventListener("pageshow", (event) => {
+      if (event.persisted) {
+        recoverApp();
+      }
+    });
 }
