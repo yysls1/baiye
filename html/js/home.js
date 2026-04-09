@@ -233,7 +233,6 @@ export async function initHome() {
       if (error) return alert("留言失败: " + error.message);
 
       commentInput.value = "";
-      await loadComments(); // 更新留言列表
     } catch (err) {
       console.error("发送留言异常:", err);
       alert("发送留言失败");
@@ -261,19 +260,109 @@ export async function initHome() {
     }
   }
 
-// 留言板发送
-sendBtn.addEventListener("click", sendComment);
-commentInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    sendComment();
-  }
-});
 
 // 注册按钮
 const registerBtn = document.getElementById("registerBtn");
 registerBtn.addEventListener("click", registerMember);
 
+
+// ======================
+// 实时监听留言（核心🔥）
+// ======================
+const channel = supabase.channel('baiye_comments_channel');
+
+channel
+  .on(
+    'postgres_changes',
+    {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'baiye_comments',
+    },
+    (payload) => {
+      const newComment = payload.new;
+
+      showToast("💬 有新留言！");
+      playSound();
+
+      addCommentToPage(newComment); // ✅ 直接加
+    }
+  )
+  .subscribe((status) => {
+    console.log("订阅状态:", status);
+  });
+
+  //pop音效
+  const audio = new Audio("music/pop.mp3");
+
+  function playSound() {
+    audio.currentTime = 0; // 防止连续触发没声音
+    audio.play();
+  }
+
+  async function addCommentToPage(c) {
+      // 👉 查用户信息
+      const { data: member } = await supabase
+        .from("baiye_members")
+        .select("avatar_url, role, username")
+        .eq("id", c.user_id)
+        .maybeSingle();
+
+      const avatarUrl = member?.avatar_url || "img/default-avatar.png";
+      const role = member?.role || "";
+      const username = member?.username || c.nickname || "未命名";
+
+      const displayName =
+        c.nickname && c.nickname !== username
+          ? `${username}（${c.nickname}）`
+          : username;
+
+      const div = document.createElement("div");
+      div.className = "comment-card";
+
+      div.innerHTML = `
+        <div class="avatar"><img src="${avatarUrl}"></div>
+        <div class="comment-content">
+          <div class="nickname-row">
+            <span class="nickname">${displayName}</span>
+            ${role ? `<span class="role">【${role}】</span>` : ""}
+          </div>
+          <div class="content">${c.content}</div>
+          <div class="time">刚刚</div>
+        </div>
+      `;
+
+      commentList.prepend(div);
+    }
+    
+    function showToast(message) {
+    const toast = document.createElement("div");
+    toast.innerText = message;
+
+    toast.style.position = "fixed";
+    toast.style.bottom = "20px";
+    toast.style.right = "20px";
+    toast.style.background = "rgba(0,0,0,0.8)";
+    toast.style.color = "#fff";
+    toast.style.padding = "10px 20px";
+    toast.style.borderRadius = "10px";
+    toast.style.zIndex = "9999";
+    toast.style.opacity = "0";
+    toast.style.transition = "0.3s";
+
+    document.body.appendChild(toast);
+
+    // 淡入
+    setTimeout(() => {
+      toast.style.opacity = "1";
+    }, 10);
+
+    // 淡出
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      setTimeout(() => toast.remove(), 300);
+    }, 2500);
+  }
 
   /* ======================
      初始化
