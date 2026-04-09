@@ -12,7 +12,7 @@ export async function initHome() {
   const msg = document.getElementById("msg");
   const sendBtn = document.getElementById("commentSendBtn");
   const memberCache = new Map();
-  
+  const renderedIds = new Set();
   if (!memberGrid || !commentList || !commentInput || !avatarInput || !msg || !sendBtn) return;
 
   
@@ -169,17 +169,26 @@ export async function initHome() {
      留言板
   ===================== */
   async function loadComments() {
+    const oldHTML = commentList.innerHTML; // ✅ 先保存旧内容
+
     try {
       const { data: comments, error } = await supabase
         .from("baiye_comments")
         .select("id, user_id, nickname, content, created_at")
         .order("created_at", { ascending: false });
 
-      if (error) return console.error("加载留言失败:", error.message);
-      commentList.innerHTML = "";
-      if (!comments || comments.length === 0) return;
+      if (error) throw error;
+
+      if (!comments || comments.length === 0) {
+        commentList.innerHTML = "";
+        renderedIds.clear();
+        return;
+      }
+
+      let html = "";
 
       const userIds = [...new Set(comments.map(c => c.user_id))];
+
       const { data: members } = await supabase
         .from("baiye_members")
         .select("id, avatar_url, role, username")
@@ -188,34 +197,44 @@ export async function initHome() {
       const memberMap = new Map();
       (members || []).forEach(m => memberMap.set(m.id, m));
 
+      renderedIds.clear();
       comments.forEach(c => {
+        renderedIds.add(c.id);
         const m = memberMap.get(c.user_id) || {};
+
         const avatarUrl = m.avatar_url || "img/default-avatar.png";
         const role = m.role || "";
         const username = m.username || c.nickname || "未命名";
-        const displayName = c.nickname && c.nickname !== username ? `${username}（${c.nickname}）` : username;
 
-        const div = document.createElement("div");
-        div.className = "comment-card";
-        div.innerHTML = `
-          <div class="avatar"><img src="${avatarUrl}" alt="avatar"></div>
-          <div class="comment-content">
-            <div class="nickname-row">
-              <span class="nickname">${displayName}</span>
-              ${role ? `<span class="role">【${role}】</span>` : ""}
+        const displayName =
+          c.nickname && c.nickname !== username
+            ? `${username}（${c.nickname}）`
+            : username;
+
+        html += `
+          <div class="comment-card">
+            <div class="avatar"><img src="${avatarUrl}"></div>
+            <div class="comment-content">
+              <div class="nickname-row">
+                <span class="nickname">${displayName}</span>
+                ${role ? `<span class="role">【${role}】</span>` : ""}
+              </div>
+              <div class="content">${c.content}</div>
+              <div class="time">${new Date(c.created_at).toLocaleString()}</div>
             </div>
-            <div class="content">${c.content}</div>
-            <div class="time">${new Date(c.created_at).toLocaleString()}</div>
           </div>
         `;
-        commentList.appendChild(div);
       });
-      commentList.scrollTop = 0;
+
+      commentList.innerHTML = html;
+
     } catch (err) {
       console.error("加载留言异常:", err);
+
+      // ✅ 回退旧内容（不会崩）
+      commentList.innerHTML = oldHTML;
     }
   }
-
   async function sendComment() {
     const content = commentInput.value.trim();
     if (!content) return alert("请输入留言内容");
@@ -234,10 +253,12 @@ export async function initHome() {
 
       // 🔥自己先加一条（关键）
       addCommentToPage({
+        id: "temp_" + Date.now(), // ⭐ 临时 id
         user_id: user.id,
         nickname,
         content,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        isTemp:true
       });
       if (error) return alert("留言失败: " + error.message);
 
@@ -285,112 +306,129 @@ registerBtn.addEventListener("click", registerMember);
   }
 
   async function addCommentToPage(c) {
-  const member = await getMember(c.user_id);
+    
+    if (!c.isTemp && renderedIds.has(c.id)) return;
+      renderedIds.add(c.id);
+  
+      const member = await getMember(c.user_id);
 
-  const avatarUrl =
-    (member?.avatar_url ? member.avatar_url + "?t=" + Date.now() : null)
-    || "img/default-avatar.png";
+  
+      const avatarUrl =
+      (member?.avatar_url ? member.avatar_url + "?t=" + Date.now() : null)
+      || "img/default-avatar.png";
 
-  const role = member?.role || "";
-  const username = member?.username || c.nickname || "未命名";
+      const role = member?.role || "";
+      const username = member?.username || c.nickname || "未命名";
 
-  const displayName =
-    c.nickname && c.nickname !== username
-      ? `${username}（${c.nickname}）`
-      : username;
+      const displayName =
+        c.nickname && c.nickname !== username
+          ? `${username}（${c.nickname}）`
+          : username;
 
-  const div = document.createElement("div");
-  div.className = "comment-card";
+      const div = document.createElement("div");
+      div.className = "comment-card";
 
-  div.innerHTML = `
-    <div class="avatar"><img src="${avatarUrl}"></div>
-    <div class="comment-content">
-      <div class="nickname-row">
-        <span class="nickname">${displayName}</span>
-        ${role ? `<span class="role">【${role}】</span>` : ""}
-      </div>
-      <div class="content">${c.content}</div>
-      <div class="time">刚刚</div>
-    </div>
-  `;
+      div.innerHTML = `
+        <div class="avatar"><img src="${avatarUrl}"></div>
+        <div class="comment-content">
+          <div class="nickname-row">
+            <span class="nickname">${displayName}</span>
+            ${role ? `<span class="role">【${role}】</span>` : ""}
+          </div>
+          <div class="content">${c.content}</div>
+          <div class="time">刚刚</div>
+        </div>
+      `;
 
-  commentList.prepend(div);
-  }
+      commentList.prepend(div);
+      }
 
-  function showToast(message) {
-    const toast = document.createElement("div");
-    toast.innerText = message;
+      function showToast(message) {
+        const toast = document.createElement("div");
+        toast.innerText = message;
 
-    toast.style.position = "fixed";
-    toast.style.bottom = "20px";
-    toast.style.right = "20px";
-    toast.style.background = "rgba(0,0,0,0.8)";
-    toast.style.color = "#fff";
-    toast.style.padding = "10px 20px";
-    toast.style.borderRadius = "10px";
-    toast.style.zIndex = "9999";
-    toast.style.opacity = "0";
-    toast.style.transition = "0.3s";
+        toast.style.position = "fixed";
+        toast.style.bottom = "20px";
+        toast.style.right = "20px";
+        toast.style.background = "rgba(0,0,0,0.8)";
+        toast.style.color = "#fff";
+        toast.style.padding = "10px 20px";
+        toast.style.borderRadius = "10px";
+        toast.style.zIndex = "9999";
+        toast.style.opacity = "0";
+        toast.style.transition = "0.3s";
 
-    document.body.appendChild(toast);
+        document.body.appendChild(toast);
 
-    // 淡入
-    setTimeout(() => {
-      toast.style.opacity = "1";
-    }, 10);
+        // 淡入
+        setTimeout(() => {
+          toast.style.opacity = "1";
+        }, 10);
 
-    // 淡出
-    setTimeout(() => {
-      toast.style.opacity = "0";
-      setTimeout(() => toast.remove(), 300);
-    }, 2500);
-  }
+        // 淡出
+        setTimeout(() => {
+          toast.style.opacity = "0";
+          setTimeout(() => toast.remove(), 300);
+        }, 2500);
+      }
 
-  let realtimeChannel = null;
-
-  function setupRealtime() {
+    let realtimeChannel = null;
+    let reconnecting = false;
+    function setupRealtime() {
     if (realtimeChannel) {
       supabase.removeChannel(realtimeChannel);
+      realtimeChannel = null;
     }
 
-    realtimeChannel = supabase.channel('baiye_comments_channel');
+  realtimeChannel = supabase.channel('baiye_comments_channel');
 
-    realtimeChannel
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'baiye_comments',
-        },
-        async (payload) => {
-          const newComment = payload.new;
+  realtimeChannel
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'baiye_comments',
+      },
+      async (payload) => {
+        const newComment = payload.new;
 
-          const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
 
-          // ❗如果是自己发的 → 不处理（因为已经手动加了）
-          if (user && newComment.user_id === user.id) return;
-
-          showToast("💬 有新留言！");
-          playSound();
-
-          await addCommentToPage(newComment);
+        if (user && newComment.user_id === user.id) {
+          await loadComments();
+          return;
         }
-      )
-      .subscribe(async (status) => {
-        console.log("订阅状态:", status);
+        showToast("💬 有新留言！");
+        playSound();
+
+        // ❗不要 await
+        addCommentToPage(newComment);
+      }
+    )
+    .subscribe(async (status) => {
+      console.log("订阅状态:", status);
 
       if (status === "SUBSCRIBED") {
         console.log("✅ Realtime连接成功");
-        await loadComments();
       }
 
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          console.warn("⚠️ Realtime断了，重连中...");
-          setTimeout(setupRealtime, 2000);
-        }
-      });
+      if (
+        (status === "CHANNEL_ERROR" || status === "TIMED_OUT") &&
+        !reconnecting
+      ) {
+        reconnecting = true;
+
+        console.warn("⚠️ Realtime断了，重连中...");
+
+        setTimeout(() => {
+          setupRealtime();
+          reconnecting = false;
+        }, 2000);
+      }
+    });
   }
+
 
   async function getMember(userId) {
     if (memberCache.has(userId)) {
@@ -426,15 +464,29 @@ registerBtn.addEventListener("click", registerMember);
 
   console.log("Home 页面初始化完成 ✅");
 
-
   document.addEventListener("visibilitychange", async () => {
     if (document.visibilityState === "visible") {
-      console.log("👀 回到页面 → 强制刷新 + 重连");
+      console.log("👀 回来 → 重建一切");
 
-      await loadComments();   // 拉最新
-      setupRealtime();        // 🔥关键：重连 websocket
+      try {
+        // 1️⃣ 彻底断掉旧连接
+        if (realtimeChannel) {
+          supabase.removeChannel(realtimeChannel);
+          realtimeChannel = null;
+        }
+
+        // 2️⃣ 清缓存（避免脏数据）
+        memberCache.clear();
+
+        // 3️⃣ 重新连接 realtime
+        setupRealtime();
+
+        // 4️⃣ 拉完整数据（最终状态）
+        await loadComments();
+
+      } catch (e) {
+        console.error("恢复失败:", e);
+      }
     }
   });
-
-  
 }
