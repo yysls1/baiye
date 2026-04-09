@@ -380,13 +380,10 @@ registerBtn.addEventListener("click", registerMember);
       .subscribe(async (status) => {
         console.log("订阅状态:", status);
 
-        if (status === "SUBSCRIBED") {
-          console.log("✅ Realtime连接成功");
-
-          if (status === "SUBSCRIBED") {
-           await loadComments();
-          }
-        }
+      if (status === "SUBSCRIBED") {
+        console.log("✅ Realtime连接成功");
+        await loadComments();
+      }
 
         if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
           console.warn("⚠️ Realtime断了，重连中...");
@@ -410,6 +407,7 @@ registerBtn.addEventListener("click", registerMember);
     return data;
   }
 
+
   /* ======================
      初始化
   ===================== */
@@ -427,4 +425,16 @@ registerBtn.addEventListener("click", registerMember);
   window.sendComment = sendComment;
 
   console.log("Home 页面初始化完成 ✅");
+
+
+  document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState === "visible") {
+      console.log("👀 回到页面 → 强制刷新 + 重连");
+
+      await loadComments();   // 拉最新
+      setupRealtime();        // 🔥关键：重连 websocket
+    }
+  });
+
+  
 }
