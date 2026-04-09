@@ -469,19 +469,25 @@ registerBtn.addEventListener("click", registerMember);
       console.log("👀 回来 → 重建一切");
 
       try {
-        // 1️⃣ 彻底断掉旧连接
+        // ✅ 0️⃣ 强制恢复 session（关键！！）
+        await supabase.auth.refreshSession();
+
+        // 1️⃣ 断掉旧连接
         if (realtimeChannel) {
           supabase.removeChannel(realtimeChannel);
           realtimeChannel = null;
         }
 
-        // 2️⃣ 清缓存（避免脏数据）
+        // 2️⃣ 清缓存
         memberCache.clear();
 
-        // 3️⃣ 重新连接 realtime
+        // 3️⃣ 重新拉用户（防止 user null）
+        await supabase.auth.getUser();
+
+        // 4️⃣ 重连 realtime
         setupRealtime();
 
-        // 4️⃣ 拉完整数据（最终状态）
+        // 5️⃣ 刷新数据
         await loadComments();
 
       } catch (e) {
