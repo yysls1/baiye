@@ -308,7 +308,7 @@ channel
         .eq("id", c.user_id)
         .maybeSingle();
 
-      const avatarUrl = member?.avatar_url || "img/default-avatar.png";
+      const avatarUrl = (member?.avatar_url ? member.avatar_url + "?t=" + Date.now() : null) || "img/default-avatar.png";
       const role = member?.role || "";
       const username = member?.username || c.nickname || "未命名";
 
@@ -334,7 +334,7 @@ channel
 
       commentList.prepend(div);
     }
-    
+
     function showToast(message) {
     const toast = document.createElement("div");
     toast.innerText = message;
@@ -364,6 +364,36 @@ channel
     }, 2500);
   }
 
+  function setupRealtime() {
+  const channel = supabase.channel('baiye_comments_channel');
+
+  channel
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'baiye_comments',
+      },
+      async (payload) => {
+        const newComment = payload.new;
+
+        showToast("💬 有新留言！");
+        playSound();
+
+        await addCommentToPage(newComment);
+      }
+    )
+    .subscribe((status) => {
+      console.log("订阅状态:", status);
+
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        console.warn("⚠️ Realtime断了，重连中...");
+        setTimeout(setupRealtime, 2000); // 自动重连
+      }
+    });
+}
+
   /* ======================
      初始化
   ===================== */
@@ -371,6 +401,7 @@ channel
   await loadComments();
   supabase.auth.onAuthStateChange(() => loadMembers());
 
+  setupRealtime();
   window.registerMember = registerMember;
   window.openRegister = openRegister;
   window.closeRegister = closeRegister;
