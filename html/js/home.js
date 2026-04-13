@@ -268,7 +268,8 @@ export async function initHome() {
       alert("发送留言失败");
     }
   }
-  sendBtn.onclick = sendComment;
+
+  sendBtn.addEventListener("click", sendComment);
   commentInput.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); sendComment(); } });
 
   /* ======================
@@ -395,6 +396,7 @@ registerBtn.addEventListener("click", registerMember);
         const { data: { user } } = await supabase.auth.getUser();
 
         if (user && newComment.user_id === user.id) {
+          await loadComments();
           return;
         }
         showToast("💬 有新留言！");
@@ -443,6 +445,7 @@ registerBtn.addEventListener("click", registerMember);
     return data;
   }
 
+
   /* ======================
      初始化
   ===================== */
@@ -460,52 +463,30 @@ registerBtn.addEventListener("click", registerMember);
   window.sendComment = sendComment;
 
   console.log("Home 页面初始化完成 ✅");
-    /* ======================
-      页面恢复机制（最终稳定版）
-    ====================== */
 
-    // 🔥 核心恢复函数（唯一入口）
-    async function recoverApp() {
-      console.log("🔄 强制恢复中...");
+  document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState === "visible") {
+      console.log("👀 回来 → 重建一切");
 
       try {
-        await supabase.auth.refreshSession();
-        await supabase.auth.getUser();
-
-        // 重建 realtime
+        // 1️⃣ 彻底断掉旧连接
         if (realtimeChannel) {
           supabase.removeChannel(realtimeChannel);
           realtimeChannel = null;
         }
-        setupRealtime();
 
-        // 清缓存
+        // 2️⃣ 清缓存（避免脏数据）
         memberCache.clear();
 
-        // ❗防止 UI 不同步
-        await loadMembers();
+        // 3️⃣ 重新连接 realtime
+        setupRealtime();
+
+        // 4️⃣ 拉完整数据（最终状态）
         await loadComments();
 
-        console.log("✅ 恢复完成");
       } catch (e) {
         console.error("恢复失败:", e);
       }
     }
-    // ✅ 切回页面（最常用）
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") {
-        recoverApp();
-      }
-    });
-
-    // ✅ iOS / Safari 必备（有时候只触发这个）
-    window.addEventListener("focus", () => {
-      recoverApp();
-    });
-
-    window.addEventListener("pageshow", (event) => {
-      if (event.persisted) {
-        recoverApp();
-      }
-    });
+  });
 }
