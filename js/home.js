@@ -169,72 +169,78 @@ export async function initHome() {
      留言板
   ===================== */
   async function loadComments() {
-    const oldHTML = commentList.innerHTML; // ✅ 先保存旧内容
+  const oldHTML = commentList.innerHTML;
 
-    try {
-      const { data: comments, error } = await supabase
-        .from("baiye_comments")
-        .select("id, user_id, nickname, content, created_at")
-        .order("created_at", { ascending: false });
+  try {
+    const { data: comments, error } = await supabase
+      .from("baiye_comments")
+      .select("id, user_id, nickname, content, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50); // ⭐ 限制数量（关键）
 
-      if (error) throw error;
+    if (error) throw error;
 
-      if (!comments || comments.length === 0) {
-        commentList.innerHTML = "";
-        renderedIds.clear();
-        return;
-      }
-
-      let html = "";
-
-      const userIds = [...new Set(comments.map(c => c.user_id))];
-
-      const { data: members } = await supabase
-        .from("baiye_members")
-        .select("id, avatar_url, role, username")
-        .in("id", userIds);
-
-      const memberMap = new Map();
-      (members || []).forEach(m => memberMap.set(m.id, m));
-
+    if (!comments || comments.length === 0) {
+      commentList.innerHTML = "";
       renderedIds.clear();
-      comments.forEach(c => {
-        renderedIds.add(c.id);
-        const m = memberMap.get(c.user_id) || {};
-
-        const avatarUrl = m.avatar_url || "img/default-avatar.png";
-        const role = m.role || "";
-        const username = m.username || c.nickname || "未命名";
-
-        const displayName =
-          c.nickname && c.nickname !== username
-            ? `${username}（${c.nickname}）`
-            : username;
-
-        html += `
-          <div class="comment-card">
-            <div class="avatar"><img src="${avatarUrl}"></div>
-            <div class="comment-content">
-              <div class="nickname-row">
-                <span class="nickname">${displayName}</span>
-                ${role ? `<span class="role">【${role}】</span>` : ""}
-              </div>
-              <div class="content">${c.content}</div>
-              <div class="time">${new Date(c.created_at).toLocaleString()}</div>
-            </div>
-          </div>
-        `;
-      });
-
-      commentList.innerHTML = html;
-
-    } catch (err) {
-      console.error("加载留言异常:", err);
-
-      // ✅ 回退旧内容（不会崩）
-      commentList.innerHTML = oldHTML;
+      return;
     }
+
+    let html = "";
+
+    const userIds = [...new Set(comments.map(c => c.user_id))];
+
+    const { data: members } = await supabase
+      .from("baiye_members")
+      .select("id, avatar_url, role, username")
+      .in("id", userIds);
+
+    const memberMap = new Map();
+
+    (members || []).forEach(m => {
+      memberMap.set(m.id, m);
+      memberCache.set(m.id, m); // ⭐ 缓存起来（关键）
+    });
+
+    renderedIds.clear();
+
+    comments.forEach(c => {
+      renderedIds.add(c.id);
+
+      const m = memberMap.get(c.user_id) || {};
+
+      const avatarUrl = m.avatar_url || "img/default-avatar.png";
+      const role = m.role || "";
+      const username = m.username || c.nickname || "未命名";
+
+      const displayName =
+        c.nickname && c.nickname !== username
+          ? `${username}（${c.nickname}）`
+          : username;
+
+      html += `
+        <div class="comment-card">
+          <div class="avatar"><img src="${avatarUrl}"></div>
+          <div class="comment-content">
+            <div class="nickname-row">
+              <span class="nickname">${displayName}</span>
+              ${role ? `<span class="role">【${role}】</span>` : ""}
+            </div>
+            <div class="content">${c.content}</div>
+            <div class="time">${new Date(c.created_at).toLocaleString()}</div>
+          </div>
+        </div>
+      `;
+    });
+
+    commentList.innerHTML = html;
+
+  } catch (err) {
+    console.error("加载留言异常:", err);
+    commentList.innerHTML = oldHTML;
   }
+  }
+
   async function sendComment() {
     const content = commentInput.value.trim();
     if (!content) return alert("请输入留言内容");
@@ -305,43 +311,44 @@ registerBtn.addEventListener("click", registerMember);
     audio.play();
   }
 
-  async function addCommentToPage(c) {
-    
-    if (!c.isTemp && renderedIds.has(c.id)) return;
-      renderedIds.add(c.id);
-  
-      const member = await getMember(c.user_id);
+    async function addCommentToPage(c) {
 
-  
-      const avatarUrl =
-      (member?.avatar_url ? member.avatar_url + "?t=" + Date.now() : null)
+    if (!c.isTemp && renderedIds.has(c.id)) return;
+    renderedIds.add(c.id);
+
+    // ❌ 原来：await getMember()
+    // ✅ 现在：直接用缓存
+    const member = memberCache.get(c.user_id) || {};
+
+    const avatarUrl =
+      (member.avatar_url ? member.avatar_url + "?t=" + Date.now() : null)
       || "img/default-avatar.png";
 
-      const role = member?.role || "";
-      const username = member?.username || c.nickname || "未命名";
+    const role = member.role || "";
+    const username = member.username || c.nickname || "未命名";
 
-      const displayName =
-        c.nickname && c.nickname !== username
-          ? `${username}（${c.nickname}）`
-          : username;
+    const displayName =
+      c.nickname && c.nickname !== username
+        ? `${username}（${c.nickname}）`
+        : username;
 
-      const div = document.createElement("div");
-      div.className = "comment-card";
+    const div = document.createElement("div");
+    div.className = "comment-card";
 
-      div.innerHTML = `
-        <div class="avatar"><img src="${avatarUrl}"></div>
-        <div class="comment-content">
-          <div class="nickname-row">
-            <span class="nickname">${displayName}</span>
-            ${role ? `<span class="role">【${role}】</span>` : ""}
-          </div>
-          <div class="content">${c.content}</div>
-          <div class="time">刚刚</div>
+    div.innerHTML = `
+      <div class="avatar"><img src="${avatarUrl}"></div>
+      <div class="comment-content">
+        <div class="nickname-row">
+          <span class="nickname">${displayName}</span>
+          ${role ? `<span class="role">【${role}】</span>` : ""}
         </div>
-      `;
+        <div class="content">${c.content}</div>
+        <div class="time">刚刚</div>
+      </div>
+    `;
 
-      commentList.prepend(div);
-      }
+    commentList.prepend(div);
+    }
 
       function showToast(message) {
         const toast = document.createElement("div");
@@ -395,14 +402,15 @@ registerBtn.addEventListener("click", registerMember);
 
         const { data: { user } } = await supabase.auth.getUser();
 
+        // ❌ 原来：await loadComments()
+        // ✅ 现在：直接跳过（因为已经本地加了）
         if (user && newComment.user_id === user.id) {
-          await loadComments();
           return;
         }
+
         showToast("💬 有新留言！");
         playSound();
 
-        // ❗不要 await
         addCommentToPage(newComment);
       }
     )
