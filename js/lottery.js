@@ -166,9 +166,11 @@ export async function initLottery() {
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        const center = canvas.width / 2;
-        const radius = canvas.width * 0.42;
+        const dpr = window.devicePixelRatio || 1;
+        const size = canvas.width / dpr;
 
+        const center = size / 2;
+        const radius = size * 0.42;
         // ======================
         // 空状态
         // ======================
@@ -247,7 +249,7 @@ export async function initLottery() {
                 const x = center + Math.cos(angle) * avatarDistance;
                 const y = center + Math.sin(angle) * avatarDistance;
 
-                const size = 56;
+                const size = radius * 0.10;
 
                 ctx.save();
 
@@ -352,6 +354,7 @@ export async function initLottery() {
     }
 
     animateWheel();
+    
     function physicsLoop() {
 
         if (!spinningPhysics) return;
@@ -378,12 +381,19 @@ export async function initLottery() {
 
         requestAnimationFrame(physicsLoop);
     }
+
     function resizeCanvas() {
 
         const size = Math.min(window.innerWidth * 0.92, 600);
+        const dpr = window.devicePixelRatio || 1;
 
-        canvas.width = size;
-        canvas.height = size;
+        canvas.style.width = size + "px";
+        canvas.style.height = size + "px";
+
+        canvas.width = size * dpr;
+        canvas.height = size * dpr;
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     resizeCanvas();
