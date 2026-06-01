@@ -249,7 +249,7 @@ export async function initLottery() {
                 const x = center + Math.cos(angle) * avatarDistance;
                 const y = center + Math.sin(angle) * avatarDistance;
 
-                const size = radius * 0.10;
+                const size = radius * 0.20;
 
                 ctx.save();
 
