@@ -18,20 +18,19 @@ export async function initLottery() {
             "spinBtn"
         );
 
-    const testSpinBtn =
-        document.getElementById(
-            "testSpinBtn"
-        );
-
     const winnerText =
         document.getElementById(
             "winnerText"
         );
 
     let participants = [];
-
+    let hueOffset = 0;
     let currentRotation = 0;
     let spinning = false;
+    let velocity = 0;
+    let spinningPhysics = false;
+    let targetIndex = null;
+    
     const avatarCache = {};
    
     const colors = [
@@ -163,183 +162,214 @@ export async function initLottery() {
     /* ======================
        绘制转盘
     ====================== */
-    async function drawWheel()
-    {
-        ctx.clearRect(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
+    async function drawWheel() {
 
-        if(participants.length === 0)
-        {
-            ctx.fillStyle = "#fff";
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            ctx.font = "40px serif";
+        const center = 400;
+        const radius = 350;
 
+        // ======================
+        // 空状态
+        // ======================
+        if (participants.length === 0) {
+
+            ctx.fillStyle = "#00f6ff";
+            ctx.font = "40px monospace";
             ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
 
-            ctx.fillText(
-                "暂无报名成员",
-                400,
-                400
-            );
+            ctx.shadowColor = "#00f6ff";
+            ctx.shadowBlur = 20;
 
+            ctx.fillText("暂无报名成员", center, center);
+
+            ctx.shadowBlur = 0;
             return;
         }
 
-        const center = 400;
+        const arc = (Math.PI * 2) / participants.length;
 
-        const radius = 350;
+        // ======================
+        // 扇区
+        // ======================
+        for (let index = 0; index < participants.length; index++) {
 
-        const arc =
-            Math.PI * 2 /
-            participants.length;
+            const p = participants[index];
 
-        for(
-            let index = 0;
-            index < participants.length;
-            index++
-        )
-        {
-            const p =
-                participants[index];
+            const start = index * arc;
+            const end = start + arc;
 
-            const start =
-                index * arc;
+            const hue = (index * 28 + hueOffset) % 360;
 
-            const end =
-                start + arc;
+            // ======================
+            // 🌈 霓虹渐变 fillStyle（核心）
+            // ======================
+            const gradient = ctx.createRadialGradient(
+                center, center, 0,
+                center, center, radius
+            );
 
-            // ===== 扇形 =====
+            gradient.addColorStop(0, `hsla(${hue}, 100%, 65%, 1)`);
+            gradient.addColorStop(0.4, `hsla(${hue + 15}, 100%, 45%, 1)`);
+            gradient.addColorStop(1, `hsla(${hue + 60}, 100%, 15%, 1)`);
 
+            ctx.fillStyle = gradient;
+
+            // 发光
+            ctx.shadowColor = `hsla(${hue}, 100%, 60%, 0.8)`;
+            ctx.shadowBlur = 18;
+
+            // 扇形
             ctx.beginPath();
-
-            ctx.moveTo(
-                center,
-                center
-            );
-
-            ctx.arc(
-                center,
-                center,
-                radius,
-                start,
-                end
-            );
-
-            ctx.fillStyle =
-                colors[
-                    index %
-                    colors.length
-                ];
-
+            ctx.moveTo(center, center);
+            ctx.arc(center, center, radius, start, end);
+            ctx.closePath();
             ctx.fill();
 
-            // ===== 头像 =====
+            ctx.shadowBlur = 0;
 
-            const img =
-                avatarCache[
-                    p.avatar
-                ];
+            // ======================
+            // 分割线（赛博切割）
+            // ======================
+            ctx.strokeStyle = `hsla(${hue}, 100%, 70%, 0.4)`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
 
-            if(img)
-            {
-                const angle =
-                    start +
-                    arc / 2;
+            // ======================
+            // 头像
+            // ======================
+            const img = avatarCache[p.avatar];
 
-                const avatarDistance =
-                    radius * 0.72;
+            if (img) {
 
-                const x =
-                    center +
-                    Math.cos(angle)
-                    * avatarDistance;
+                const angle = start + arc / 2;
+                const avatarDistance = radius * 0.62;
 
-                const y =
-                    center +
-                    Math.sin(angle)
-                    * avatarDistance;
+                const x = center + Math.cos(angle) * avatarDistance;
+                const y = center + Math.sin(angle) * avatarDistance;
 
-                const size = 70;
+                const size = 60;
 
                 ctx.save();
 
                 ctx.beginPath();
-
-                ctx.arc(
-                    x,
-                    y,
-                    size / 2,
-                    0,
-                    Math.PI * 2
-                );
-
+                ctx.arc(x, y, size / 2, 0, Math.PI * 2);
                 ctx.clip();
 
-                ctx.drawImage(
-                    img,
-                    x - size / 2,
-                    y - size / 2,
-                    size,
-                    size
-                );
+                ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
 
                 ctx.restore();
 
-                // 金边
-
+                // 外圈霓虹
                 ctx.beginPath();
+                ctx.arc(x, y, size / 2, 0, Math.PI * 2);
 
-                ctx.arc(
-                    x,
-                    y,
-                    size / 2,
-                    0,
-                    Math.PI * 2
-                );
-
-                ctx.strokeStyle =
-                    "#fff";
-
-                ctx.lineWidth = 3;
+                ctx.strokeStyle = `hsla(${hue}, 100%, 70%, 0.9)`;
+                ctx.shadowColor = "#00f6ff";
+                ctx.shadowBlur = 12;
+                ctx.lineWidth = 2;
 
                 ctx.stroke();
+                ctx.shadowBlur = 0;
             }
 
-            // ===== 名字 =====
+            // ======================
+            // 文字（霓虹核心）
+            // ======================
+            const text = p.name.length > 8
+                ? p.name.slice(0, 8) + "…"
+                : p.name;
+
+            const fontSize = Math.max(10, 18 - participants.length * 0.2);
+
+            ctx.font = `bold ${fontSize}px monospace`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            ctx.fillStyle = "#00f6ff";
+            ctx.shadowColor = "#00f6ff";
+            ctx.shadowBlur = 10;
+
+            const textRadius = radius - 85;
+
+            const startAngle = start + arc * 0.15;
+            const endAngle = end - arc * 0.15;
+
+            drawArcText(
+                ctx,
+                text,
+                center,
+                center,
+                textRadius,
+                startAngle,
+                endAngle
+            );
+
+            ctx.shadowBlur = 0;
+        }
+    }
+    function drawArcText(ctx, text, cx, cy, radius, startAngle, endAngle) {
+
+        const chars = text.split("");
+        const step = (endAngle - startAngle) / Math.max(chars.length, 1);
+
+        ctx.save();
+
+        for (let i = 0; i < chars.length; i++) {
+
+            const angle = startAngle + step * i;
 
             ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(angle);
+            ctx.translate(radius, 0);
 
-            ctx.translate(
-                center,
-                center
-            );
+            ctx.rotate(Math.PI / 2);
 
-            ctx.rotate(
-                start +
-                arc / 2
-            );
-
-            ctx.fillStyle =
-                "#111";
-
-            ctx.font =
-                "bold 18px serif";
-
-            ctx.textAlign =
-                "center";
-
-            ctx.fillText(
-                p.name,
-                radius - 120,
-                55
-            );
+            ctx.fillText(chars[i], 0, 0);
 
             ctx.restore();
         }
+
+        ctx.restore();
+    }
+    function animateWheel() {
+        hueOffset += 0.2;
+        requestAnimationFrame(animateWheel);
+
+        // 只有有数据时才重绘，避免浪费性能
+        if (participants.length > 0) {
+            drawWheel();
+        }
+    }
+
+    animateWheel();
+    function physicsLoop() {
+
+        if (!spinningPhysics) return;
+
+        // ===== 摩擦（越小越滑）=====
+        const friction = 0.985;
+
+        velocity *= friction;
+
+        currentRotation += velocity;
+
+        // 更新 canvas 旋转
+        canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+        // ===== 停止条件 =====
+        if (Math.abs(velocity) < 0.05) {
+
+            spinningPhysics = false;
+            velocity = 0;
+
+            onSpinEnd();
+            return;
+        }
+
+        requestAnimationFrame(physicsLoop);
     }
     /* ======================
        权限检查
@@ -386,6 +416,9 @@ export async function initLottery() {
     ====================== */
     async function spin(saveWinner = true)
     {
+        const isTest = saveWinner === false;
+        const prefix = isTest ? "[测试] " : "";
+
         if (saveWinner) {
             const isAdmin = await canSpinLottery();
 
@@ -435,31 +468,58 @@ export async function initLottery() {
         // 🎯 2. 等动画结束
         setTimeout(async () => {
 
+            const displayName = prefix + winner.name;
+
             winnerText.innerHTML = `
                 🎉 恭喜<br>
-                <strong>${winner.name}</strong><br>
+                <strong>${displayName}</strong><br>
                 获得本次奇遇！
             `;
 
-            // 🎯 3. 写数据库（只写一次！）
-            if (saveWinner) {
+            // 🎯 3. 写数据库（只写一次）
+            const { data, error } = await supabase
+                .from("baiye_lottery_winners")
+                .insert({
+                    winner_id: winner.id,
+                    winner_name: displayName
+                });
 
-                const { data, error } = await supabase
-                    .from("baiye_lottery_winners")
-                    .insert({
-                        winner_id: winner.id,
-                        winner_name: winner.name
-                    });
+            console.log("winner saved:", data, error);
 
-                console.log("winner saved:", data, error);
-
-                // ⭐ 关键：刷新列表
-                await loadWinnerList();
-            }
-
+            // ⭐ 刷新列表
+            await loadWinnerList();
+            await loadTestWinnerList();
             spinning = false;
 
         }, 8000);
+    }
+    async function onSpinEnd() {
+
+        // 📱 手机震动（关键）
+        if (navigator.vibrate) {
+            navigator.vibrate([80, 40, 120]);
+        }
+
+        const winner = participants[winnerIndex];
+        const prefix = "[测试] ";
+
+        const displayName = prefix + winner.name;
+
+        winnerText.innerHTML = `
+            🎉 恭喜<br>
+            <strong>${displayName}</strong><br>
+            获得本次奇遇！
+        `;
+
+        await supabase
+            .from("baiye_lottery_winners")
+            .insert({
+                winner_id: winner.id,
+                winner_name: displayName
+            });
+
+        await loadWinnerList();
+        await loadTestWinnerList();
     }
     async function loadAvatar(url)
     {
@@ -497,21 +557,16 @@ export async function initLottery() {
 
         const { data, error } = await supabase
             .from("baiye_lottery_winners")
-            .select("winner_name, created_at")
+            .select("winner_name")
+            .not("winner_name", "like", "[测试]%")
             .order("id", { ascending: false })
             .limit(20);
 
-        if (error) {
-            console.log(error);
-            return;
-        }
+        if (error) return;
 
         const list = document.getElementById("winnerList");
 
-        if (!list) {
-            console.log("winnerList not found in HTML");
-            return;
-        }
+        if (!list) return;
 
         list.innerHTML = "";
 
@@ -530,6 +585,41 @@ export async function initLottery() {
             list.appendChild(div);
         });
     }
+    async function loadTestWinnerList() {
+
+        const { data, error } = await supabase
+            .from("baiye_lottery_winners")
+            .select("winner_name")
+            .like("winner_name", "[测试]%")
+            .order("id", { ascending: false })
+            .limit(20);
+
+        if (error) {
+            console.log(error);
+            return;
+        }
+
+        const list = document.getElementById("testWinnerList");
+
+        if (!list) return;
+
+        list.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            list.innerHTML = `<div class="winner-item">暂无测试记录</div>`;
+            return;
+        }
+
+        data.forEach(item => {
+
+            const div = document.createElement("div");
+            div.className = "winner-item";
+
+            div.textContent = `🧪 ${item.winner_name.replace("[TEST] ", "")}`;
+
+            list.appendChild(div);
+        });
+    }
     /* ======================
        事件
     ====================== */
@@ -539,19 +629,16 @@ export async function initLottery() {
 
     spinBtn.onclick =
         () => spin(true);
-
-    if (testSpinBtn) {
-
-        testSpinBtn.onclick =
-            () => spin(false);
-    }
-
+    
+    testSpinBtn.onclick = () => spin(false); // 测试
+    
     /* ======================
        初始化
     ====================== */
 
     await loadParticipants();
     await loadWinnerList();
+    await loadTestWinnerList();
 
     console.log(
         "Lottery 初始化完成"
