@@ -33,14 +33,13 @@ h1 {
 .wheel-wrapper {
     position: relative;
 
-    width: min(90vw, 820px);
-    height: min(90vw, 820px);
+    width: min(92vw, 600px);
+    aspect-ratio: 1 / 1;   /* ⭐关键：保持正圆 */
 
-    margin: 40px auto 50px;
+    margin: 20px auto;
 
-    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.25));
+    filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.25));
 }
-
 /* ======================
    转盘主体（增强质感）
 ====================== */

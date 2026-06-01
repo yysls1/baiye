@@ -166,8 +166,8 @@ export async function initLottery() {
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        const center = 400;
-        const radius = 350;
+        const center = canvas.width / 2;
+        const radius = canvas.width * 0.42;
 
         // ======================
         // 空状态
@@ -203,7 +203,7 @@ export async function initLottery() {
             const hue = (index * 28 + hueOffset) % 360;
 
             // ======================
-            // 🌈 霓虹渐变 fillStyle（核心）
+            // 🌈 霓虹渐变
             // ======================
             const gradient = ctx.createRadialGradient(
                 center, center, 0,
@@ -216,11 +216,9 @@ export async function initLottery() {
 
             ctx.fillStyle = gradient;
 
-            // 发光
             ctx.shadowColor = `hsla(${hue}, 100%, 60%, 0.8)`;
             ctx.shadowBlur = 18;
 
-            // 扇形
             ctx.beginPath();
             ctx.moveTo(center, center);
             ctx.arc(center, center, radius, start, end);
@@ -230,38 +228,45 @@ export async function initLottery() {
             ctx.shadowBlur = 0;
 
             // ======================
-            // 分割线（赛博切割）
+            // 分割线
             // ======================
-            ctx.strokeStyle = `hsla(${hue}, 100%, 70%, 0.4)`;
+            ctx.strokeStyle = `hsla(${hue}, 100%, 70%, 0.35)`;
             ctx.lineWidth = 2;
             ctx.stroke();
 
             // ======================
-            // 头像
+            // ⭐ 头像（往中心收，避免冲突）
             // ======================
             const img = avatarCache[p.avatar];
 
             if (img) {
 
                 const angle = start + arc / 2;
-                const avatarDistance = radius * 0.62;
 
+                const avatarDistance = radius * 0.70;
                 const x = center + Math.cos(angle) * avatarDistance;
                 const y = center + Math.sin(angle) * avatarDistance;
 
-                const size = 60;
+                const size = 56;
 
                 ctx.save();
 
+                // 👉 移动到头像中心
+                ctx.translate(x, y);
+
+                // ⭐关键：让头像跟随扇区方向
+                ctx.rotate(angle + Math.PI / 2);
+
+                // ===== 画头像 =====
                 ctx.beginPath();
-                ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+                ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
                 ctx.clip();
 
-                ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
+                ctx.drawImage(img, -size / 2, -size / 2, size, size);
 
                 ctx.restore();
 
-                // 外圈霓虹
+                // ===== 外圈霓虹（不旋转）=====
                 ctx.beginPath();
                 ctx.arc(x, y, size / 2, 0, Math.PI * 2);
 
@@ -275,13 +280,13 @@ export async function initLottery() {
             }
 
             // ======================
-            // 文字（霓虹核心）
+            // ⭐ 文字（往外推，避免压头像）
             // ======================
             const text = p.name.length > 8
                 ? p.name.slice(0, 8) + "…"
                 : p.name;
 
-            const fontSize = Math.max(10, 18 - participants.length * 0.2);
+            const fontSize = Math.max(10, 16 - participants.length * 0.15);
 
             ctx.font = `bold ${fontSize}px monospace`;
             ctx.textAlign = "center";
@@ -291,10 +296,10 @@ export async function initLottery() {
             ctx.shadowColor = "#00f6ff";
             ctx.shadowBlur = 10;
 
-            const textRadius = radius - 85;
+            const textRadius = radius * 0.92; // 👈 关键：推外层
 
-            const startAngle = start + arc * 0.15;
-            const endAngle = end - arc * 0.15;
+            const startAngle = start + arc * 0.18;
+            const endAngle = end - arc * 0.18;
 
             drawArcText(
                 ctx,
@@ -307,6 +312,7 @@ export async function initLottery() {
             );
 
             ctx.shadowBlur = 0;
+
         }
     }
     function drawArcText(ctx, text, cx, cy, radius, startAngle, endAngle) {
@@ -321,6 +327,7 @@ export async function initLottery() {
             const angle = startAngle + step * i;
 
             ctx.save();
+
             ctx.translate(cx, cy);
             ctx.rotate(angle);
             ctx.translate(radius, 0);
@@ -371,6 +378,16 @@ export async function initLottery() {
 
         requestAnimationFrame(physicsLoop);
     }
+    function resizeCanvas() {
+
+        const size = Math.min(window.innerWidth * 0.92, 600);
+
+        canvas.width = size;
+        canvas.height = size;
+    }
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
     /* ======================
        权限检查
     ====================== */
@@ -467,6 +484,9 @@ export async function initLottery() {
 
         // 🎯 2. 等动画结束
         setTimeout(async () => {
+            if (navigator.vibrate) {
+                navigator.vibrate([80, 30, 120, 40, 200]);
+            }
 
             const displayName = prefix + winner.name;
 
@@ -494,11 +514,6 @@ export async function initLottery() {
         }, 8000);
     }
     async function onSpinEnd() {
-
-        // 📱 手机震动（关键）
-        if (navigator.vibrate) {
-            navigator.vibrate([80, 40, 120]);
-        }
 
         const winner = participants[winnerIndex];
         const prefix = "[测试] ";
