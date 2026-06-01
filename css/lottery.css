@@ -126,3 +126,28 @@
 
     display:block;
 }
+
+.winner-list{
+    width: min(600px, 90vw);
+    margin: 30px auto 0 auto;
+
+    max-height: 200px;
+    overflow-y: auto;
+
+    background: rgba(0,0,0,0.7);
+    border-radius: 12px;
+    padding: 12px;
+
+    color: #fff;
+    font-size: 16px;
+
+    text-align: left;
+}
+.winner-item{
+    padding: 6px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.winner-item:last-child{
+    border-bottom: none;
+}

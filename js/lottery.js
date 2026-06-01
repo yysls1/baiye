@@ -386,67 +386,45 @@ export async function initLottery() {
     ====================== */
     async function spin(saveWinner = true)
     {
-        if(saveWinner)
-        {
-            const isAdmin =
-                await canSpinLottery();
+        if (saveWinner) {
+            const isAdmin = await canSpinLottery();
 
-            if(!isAdmin)
-            {
-                alert(
-                    "抽奖时间未开启(派对开启)"
-                );
+            if (!isAdmin) {
+                alert("抽奖时间未开启(派对开启)");
                 return;
             }
         }
 
-        if(spinning)
-            return;
+        if (spinning) return;
 
-        if(participants.length === 0)
-        {
+        if (participants.length === 0) {
             alert("暂无报名成员");
             return;
         }
 
         spinning = true;
 
+        // 🎯 1. 先抽 winner
         const winnerIndex =
-            Math.floor(
-                Math.random() *
-                participants.length
-            );
+            Math.floor(Math.random() * participants.length);
 
-        const arc =
-            360 /
-            participants.length;
+        const winner = participants[winnerIndex];
 
-        // 中奖扇区中心角度
+        const arc = 360 / participants.length;
+
         const winnerCenterAngle =
-            winnerIndex * arc +
-            arc / 2;
+            winnerIndex * arc + arc / 2;
 
-        // 指针位置（顶部）
         const pointerAngle = 270;
 
-        // 当前已经旋转的角度
-        const currentAngle =
-            currentRotation % 360;
+        const currentAngle = currentRotation % 360;
 
-        // 需要额外旋转多少
         let rotateTo =
-            pointerAngle -
-            winnerCenterAngle -
-            currentAngle;
+            pointerAngle - winnerCenterAngle - currentAngle;
 
-        if(rotateTo < 0)
-        {
-            rotateTo += 360;
-        }
+        if (rotateTo < 0) rotateTo += 360;
 
-        currentRotation +=
-            360 * 8 +
-            rotateTo;
+        currentRotation += 360 * 8 + rotateTo;
 
         canvas.style.transition =
             "transform 8s cubic-bezier(.15,.85,.15,1)";
@@ -454,44 +432,34 @@ export async function initLottery() {
         canvas.style.transform =
             `rotate(${currentRotation}deg)`;
 
-        setTimeout(
-            async () => {
+        // 🎯 2. 等动画结束
+        setTimeout(async () => {
 
-                const winner =
-                    participants[
-                        winnerIndex
-                    ];
-
-                winnerText.innerHTML =
-                `
+            winnerText.innerHTML = `
                 🎉 恭喜<br>
-                <strong>
-                    ${winner.name}
-                </strong>
-                <br>
+                <strong>${winner.name}</strong><br>
                 获得本次奇遇！
-                `;
+            `;
 
-                if(saveWinner)
-                {
-                    await supabase
-                    .from(
-                        "baiye_lottery_winners"
-                    )
+            // 🎯 3. 写数据库（只写一次！）
+            if (saveWinner) {
+
+                const { data, error } = await supabase
+                    .from("baiye_lottery_winners")
                     .insert({
-                        winner_id:
-                            winner.id,
-
-                        winner_name:
-                            winner.name
+                        winner_id: winner.id,
+                        winner_name: winner.name
                     });
-                }
 
-                spinning = false;
+                console.log("winner saved:", data, error);
 
-            },
-            8000
-        );
+                // ⭐ 关键：刷新列表
+                await loadWinnerList();
+            }
+
+            spinning = false;
+
+        }, 8000);
     }
     async function loadAvatar(url)
     {
@@ -525,6 +493,43 @@ export async function initLottery() {
             img.src = url;
         });
     }
+    async function loadWinnerList() {
+
+        const { data, error } = await supabase
+            .from("baiye_lottery_winners")
+            .select("winner_name, created_at")
+            .order("id", { ascending: false })
+            .limit(20);
+
+        if (error) {
+            console.log(error);
+            return;
+        }
+
+        const list = document.getElementById("winnerList");
+
+        if (!list) {
+            console.log("winnerList not found in HTML");
+            return;
+        }
+
+        list.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            list.innerHTML = `<div class="winner-item">暂无中奖记录</div>`;
+            return;
+        }
+
+        data.forEach(item => {
+
+            const div = document.createElement("div");
+            div.className = "winner-item";
+
+            div.textContent = `🎉 ${item.winner_name}`;
+
+            list.appendChild(div);
+        });
+    }
     /* ======================
        事件
     ====================== */
@@ -546,6 +551,7 @@ export async function initLottery() {
     ====================== */
 
     await loadParticipants();
+    await loadWinnerList();
 
     console.log(
         "Lottery 初始化完成"
