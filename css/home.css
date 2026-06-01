@@ -193,6 +193,11 @@ h2 {
 
 .actions {
   margin-top: clamp(25px, 12vw, 55px);
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 20px; /* 按钮间距 */
 }
 .actions button {
   padding: clamp(15px, 12vw, 35px);
@@ -206,6 +211,7 @@ h2 {
   background: linear-gradient(135deg, #ffd700, #ff9900);
   transition: 0.25s ease;
   box-shadow: 0 4px 14px rgba(255, 170, 0, 0.4);
+  
 }
 
 .actions button:hover {

@@ -1,6 +1,7 @@
 import { initHome } from './home.js';
 import { initPhotos } from './photos.js';
 import { BGMManager } from './bgm.js';
+import { initLottery } from './lottery.js';
 
 const app = document.getElementById("app");
 
@@ -38,7 +39,8 @@ async function loadPage(page) {
     // 卸载旧页面专属 CSS
     removeCSS('home-css');
     removeCSS('photos-css');
-
+    removeCSS('lottery-css');
+    
     // 页面专属初始化和 CSS
     if (page === "home.html") {
       initHome();
@@ -55,6 +57,14 @@ async function loadPage(page) {
           loadPage('home.html');
         });
       }
+    }
+    if(page === "lottery.html")
+    {
+        initLottery();
+        loadCSSOnce(
+            'css/lottery.css',
+            'lottery-css'
+        );
     }
 
   } catch (err) {
